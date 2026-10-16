@@ -12,11 +12,11 @@ import webbrowser
 PORT = 8000
 
 HTML_CONTENT = """<!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PayLite â€” Phones & motorcycles on daily payments</title>
+  <title>PayLite — Téléphones & motos en paiements quotidiens</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
@@ -111,20 +111,20 @@ HTML_CONTENT = """<!DOCTYPE html>
       createP("Motorcycle", "TVS 150cc", "tvs-150cc", 70, 1.4),
     ];
 
-    const filters = ["All offers", "iPhone", "Samsung", "Tecno", "Infinix", "Motorcycle"];
+    const filters = ["Toutes les offres", "iPhone", "Samsung", "Tecno", "Infinix", "Moto"];
 
     const features = [
-      { icon: SmartphoneIcon, title: "Latest devices", text: "iPhone, Galaxy Ultra, Tecno and Infinix in stock." },
-      { icon: CalendarDaysIcon, title: "Daily plans", text: "Pay back a little each day over 12 to 18 months." },
-      { icon: ShieldCheckIcon, title: "No hidden fees", text: "The deposit and daily amount are clearly stated from the outset." },
-      { icon: WalletIcon, title: "Total ownership", text: "Complete your plan and the article is 100% yours." },
+      { icon: SmartphoneIcon, title: "Derniers appareils", text: "iPhone, Galaxy Ultra, Tecno et Infinix en stock." },
+      { icon: CalendarDaysIcon, title: "Forfaits journaliers", text: "Remboursez un peu chaque jour sur 12 à 18 mois." },
+      { icon: ShieldCheckIcon, title: "Aucun frais caché", text: "L'acompte et le montant quotidien sont clairement indiqués dès le départ." },
+      { icon: WalletIcon, title: "Propriété totale", text: "Terminez votre forfait et l'article est à vous à 100%." },
     ];
 
     const steps = [
-      ["Choose your item", "Select a phone or motorcycle from the offers and check the deposit and daily amount."],
-      ["Pay the deposit", "Pay the small one-time deposit to reserve your item and start your plan."],
-      ["Pay every day", "Repay a small fixed amount each day over the chosen period of 12 to 18 months."],
-      ["Become a homeowner", "Once your plan is complete, the item is 100% yours, with nothing more to pay."],
+      ["Choisissez votre article", "Sélectionnez un téléphone ou une moto parmi les offres et vérifiez l'acompte et le montant quotidien."],
+      ["Payez l'acompte", "Payez le petit acompte unique pour réserver votre article et commencer votre forfait."],
+      ["Payez chaque jour", "Remboursez un petit montant fixe chaque jour sur la période choisie de 12 à 18 mois."],
+      ["Devenez propriétaire", "Une fois votre forfait terminé, l'article est à vous à 100%, sans rien de plus à payer."],
     ];
 
     const money = (n) => (n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`);
@@ -183,7 +183,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                 <h2 className="truncate text-2xl font-semibold tracking-tight">{product.name}</h2>
                 <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                   <CalendarDaysIcon className="h-4 w-4" />
-                  {product.months}-month plan
+                  Forfait de {product.months} mois
                 </p>
                 <p className="mt-2 font-display text-xl font-bold">
                   {money(product.total)}
@@ -202,22 +202,22 @@ HTML_CONTENT = """<!DOCTYPE html>
             <div className="p-5 sm:p-6">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-secondary p-4">
-                  <div className="text-sm text-muted-foreground">Deposit today</div>
+                  <div className="text-sm text-muted-foreground">Acompte aujourd'hui</div>
                   <div className="mt-1 font-display text-2xl font-bold">{money(product.dep)}</div>
                 </div>
                 <div className="rounded-xl bg-secondary p-4">
-                  <div className="text-sm text-muted-foreground">Daily payment</div>
+                  <div className="text-sm text-muted-foreground">Paiement quotidien</div>
                   <div className="mt-1 font-display text-2xl font-bold">{dayMoney(product.day)}</div>
                 </div>
               </div>
 
               <div className="mt-3 rounded-xl bg-secondary p-4">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Payment period</span>
-                  <span className="font-semibold">{product.days} days</span>
+                  <span className="text-muted-foreground">Période de paiement</span>
+                  <span className="font-semibold">{product.days} jours</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Total daily payments</span>
+                  <span className="text-muted-foreground">Total des paiements quotidiens</span>
                   <span className="font-semibold">{money(dailyTotal)}</span>
                 </div>
               </div>
@@ -227,12 +227,12 @@ HTML_CONTENT = """<!DOCTYPE html>
                 className={`${btn} mt-5 h-12 w-full rounded-full text-base`}
               >
                 <ShieldCheckIcon className="mr-2 h-5 w-5" />
-                Continue with Airtel to verify
+                Continuer avec Airtel pour vérifier
               </button>
 
               <p className="mt-4 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
                 <CircleCheckIcon className="h-4 w-4 shrink-0" />
-                Check your eligibility â€” registration is non-binding.
+                Vérifiez votre éligibilité — l'inscription est sans engagement.
               </p>
             </div>
           </div>
@@ -241,9 +241,12 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     function App() {
-      const [filter, setFilter] = useState("All offers");
+      const [filter, setFilter] = useState("Toutes les offres");
       const [ask, setAsk] = useState(null);
-      const shown = filter === "All offers" ? products : products.filter((x) => x.cat === filter);
+      const shown = filter === "Toutes les offres" ? products : products.filter((x) => {
+        if (filter === "Moto") return x.cat === "Motorcycle";
+        return x.cat === filter;
+      });
 
       return (
         <div id="top" className="min-h-screen overflow-x-hidden bg-background">
@@ -257,10 +260,10 @@ HTML_CONTENT = """<!DOCTYPE html>
                 <span className="font-display text-xl font-bold">PayLite</span>
               </a>
               <nav className="flex justify-center gap-4 text-sm text-muted-foreground sm:gap-10 sm:text-[17px]">
-                <a href="#offers" className="hover:text-foreground">Offers</a>
-                <a href="#how" className="whitespace-nowrap hover:text-foreground">How it works</a>
+                <a href="#offers" className="hover:text-foreground">Offres</a>
+                <a href="#how" className="whitespace-nowrap hover:text-foreground">Comment ça marche</a>
               </nav>
-              <a href="#offers" className={`${btn} h-9 px-4 text-sm sm:px-6 sm:text-[17px]`}>To start</a>
+              <a href="#offers" className={`${btn} h-9 px-4 text-sm sm:px-6 sm:text-[17px]`}>Commencer</a>
             </div>
           </header>
 
@@ -268,20 +271,20 @@ HTML_CONTENT = """<!DOCTYPE html>
           <section className={`${container} grid gap-14 py-12 lg:grid-cols-2 lg:gap-10`}>
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-sm font-medium sm:text-base">
-                <ShieldCheckIcon className="h-4 w-4" /> Small deposit. Easy daily payments.
+                <ShieldCheckIcon className="h-4 w-4" /> Petit acompte. Paiements quotidiens faciles.
               </span>
               <h1 className="mt-7 text-[2.6rem] font-semibold leading-[1.07] tracking-tight sm:text-6xl lg:text-[72px]">
-                Get the phone<br />or motorcycle<br />you want,<br />day after day.
+                Obtenez le téléphone<br />ou la moto<br />de vos rêves,<br />jour après jour.
               </h1>
               <p className="mt-9 max-w-[580px] text-lg leading-relaxed text-muted-foreground sm:text-[22px]">
-                Make a small down payment today and pay the rest in affordable daily installments. Choose from iPhones, Samsung, Tecno, Infinix, and motorcycles.
+                Faites un petit acompte aujourd'hui et payez le reste en mensualités quotidiennes abordables. Choisissez parmi nos iPhones, Samsung, Tecno, Infinix et motos.
               </p>
               <div className="mt-11 flex items-center gap-12">
-                <a href="#offers" className={`${btn} h-11 px-9 text-lg`}>View offers</a>
-                <a href="#how" className="text-lg font-medium hover:opacity-80">How it works</a>
+                <a href="#offers" className={`${btn} h-11 px-9 text-lg`}>Voir les offres</a>
+                <a href="#how" className="text-lg font-medium hover:opacity-80">Comment ça marche</a>
               </div>
               <div className="mt-14 grid max-w-[520px] grid-cols-3 gap-6">
-                {[["18+", "Devices and motorcycles"], ["$35", "Deposit from"], ["$0.65", "Per day from"]].map(([v, l]) => (
+                {[["18+", "Appareils et motos"], ["35 $", "Acompte dès"], ["0,65 $", "Par jour dès"]].map(([v, l]) => (
                   <div key={v}>
                     <div className="font-display text-3xl font-bold">{v}</div>
                     <div className="mt-1 text-muted-foreground sm:text-lg">{l}</div>
@@ -305,10 +308,10 @@ HTML_CONTENT = """<!DOCTYPE html>
 
           {/* Offers */}
           <section id="offers" className={`${container} scroll-mt-16 py-24`}>
-            <p className="text-muted-foreground">Choose a brand</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">Browse the available offers</h2>
+            <p className="text-muted-foreground">Choisissez une marque</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">Parcourir les offres disponibles</h2>
             <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-              Select a category to see the devices and motorcycles you can take home today with a small deposit and easy daily payments.
+              Sélectionnez une catégorie pour voir les téléphones et les motos que vous pouvez emporter chez vous dès aujourd'hui avec un petit acompte et des paiements quotidiens faciles.
             </p>
             <div className="-mx-5 mt-8 flex gap-3 overflow-x-auto px-5 pb-2 sm:mx-0 sm:flex-wrap sm:px-0">
               {filters.map((f) => (
@@ -330,27 +333,27 @@ HTML_CONTENT = """<!DOCTYPE html>
                   <div className="relative aspect-[4/3] bg-secondary/50 flex items-center justify-center">
                     <ProductPlaceholder product={x} />
                     <span className="absolute left-4 top-4 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium">
-                      {x.months} months
+                      {x.months} mois
                     </span>
                   </div>
                   <div className="flex flex-1 flex-col p-5">
                     <h3 className="text-lg font-semibold">{x.name}</h3>
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="rounded-xl bg-secondary p-3">
-                        <div className="text-xs text-muted-foreground">Deposit</div>
+                        <div className="text-xs text-muted-foreground">Acompte</div>
                         <div className="font-display text-xl font-bold">{money(x.dep)}</div>
                       </div>
                       <div className="rounded-xl bg-secondary p-3">
-                        <div className="text-xs text-muted-foreground">Per day</div>
+                        <div className="text-xs text-muted-foreground">Par jour</div>
                         <div className="font-display text-xl font-bold">{dayMoney(x.day)}</div>
                       </div>
                     </div>
                     <p className="mt-4 text-sm text-muted-foreground">
-                      Pay {money(x.dep)} today, then {dayMoney(x.day)}/day for {x.days} days.
+                      Payez {money(x.dep)} aujourd'hui, puis {dayMoney(x.day)}/jour pendant {x.days} jours.
                     </p>
                     <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-4 mt-5">
                       <div>
-                        <div className="text-xs text-muted-foreground">Total price to pay</div>
+                        <div className="text-xs text-muted-foreground">Prix total à payer</div>
                         <div className="font-display text-lg font-bold">
                           {money(x.total)}
                           {x.moto && " *"}
@@ -360,7 +363,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                         onClick={() => setAsk(x)}
                         className={`${btn} h-9 shrink-0 cursor-pointer rounded-full px-5 text-sm`}
                       >
-                        Ask
+                        Demander
                       </button>
                     </div>
                   </div>
@@ -368,14 +371,14 @@ HTML_CONTENT = """<!DOCTYPE html>
               ))}
             </div>
             <p className="mt-8 text-sm text-muted-foreground">
-              * Motorcycle prices are estimates. Please specify your desired deposit, daily rate, and rental duration, and we will update these offers accordingly.
+              * Les prix des motos sont des estimations. Veuillez spécifier votre acompte souhaité, le tarif journalier et la durée de location, et nous mettrons à jour ces offres en conséquence.
             </p>
           </section>
 
           {/* How it works */}
           <section id="how" className={`${container} scroll-mt-16 py-24`}>
-            <p className="text-muted-foreground">How it works</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">Four simple steps to becoming an owner</h2>
+            <p className="text-muted-foreground">Comment ça marche</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">Quatre étapes simples pour devenir propriétaire</h2>
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {steps.map(([t, d], i) => (
                 <div key={t} className="rounded-[22px] border border-border bg-card p-6">
@@ -392,7 +395,7 @@ HTML_CONTENT = """<!DOCTYPE html>
             <div className={`${container} py-10`}>
               <div className="font-display text-xl font-bold">PayLite</div>
               <p className="mt-2 max-w-xl text-muted-foreground">
-                Become an owner of appliances and motorcycles with a small deposit and daily payments.
+                Devenez propriétaire d'appareils et de motos avec un petit acompte et des paiements quotidiens.
               </p>
             </div>
           </footer>
