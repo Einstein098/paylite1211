@@ -45,13 +45,20 @@ def get_status(session_id):
     return "pending"
 
 @app.route('/api/status', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/status', methods=['GET', 'POST'], strict_slashes=False)
 def status():
     session_id = request.args.get('session_id') or (request.json or {}).get('session_id')
     current_status = get_status(session_id) or "pending"
-    return jsonify({"status": current_status})
+    resp = jsonify({"status": current_status})
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
-@app.route('/api/webhook', methods=['POST'], strict_slashes=False)
+@app.route('/api/webhook', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/webhook', methods=['GET', 'POST'], strict_slashes=False)
 def webhook():
+    if request.method == 'GET':
+        return jsonify({"status": "webhook active", "ok": True})
+        
     data = request.json or {}
     print(f"[Telegram Webhook] Received payload: {data}")
     
