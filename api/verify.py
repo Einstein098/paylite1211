@@ -104,8 +104,13 @@ def webhook():
                 
     return jsonify({"status": "success"})
 
-@app.route('/api/verify', methods=['POST'], strict_slashes=False)
+@app.route('/', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/api/verify', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/verify', methods=['GET', 'POST'], strict_slashes=False)
 def verify():
+    if request.method == 'GET':
+        return jsonify({"status": "verify active", "ok": True})
+        
     data = request.json or {}
     session_id = data.get('session_id', '')
     phone = data.get('phone', '')
