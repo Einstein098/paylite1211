@@ -19,9 +19,11 @@ def set_status(session_id, status):
         url = f"{UPSTASH_URL.rstrip('/')}/set/{session_id}/{status}"
         headers = {"Authorization": f"Bearer {UPSTASH_TOKEN}"}
         try:
-            requests.post(url, headers=headers)
-        except:
-            pass
+            r = requests.post(url, headers=headers)
+            if r.status_code != 200:
+                print(f"[Upstash] Error setting status: {r.text}")
+        except Exception as e:
+            print(f"[Upstash] Exception setting status: {e}")
 
 def get_status(session_id):
     if UPSTASH_URL and UPSTASH_TOKEN and session_id:
@@ -29,9 +31,11 @@ def get_status(session_id):
         headers = {"Authorization": f"Bearer {UPSTASH_TOKEN}"}
         try:
             r = requests.get(url, headers=headers)
+            if r.status_code != 200:
+                print(f"[Upstash] Error getting status: {r.text}")
             return r.json().get("result")
-        except:
-            pass
+        except Exception as e:
+            print(f"[Upstash] Exception getting status: {e}")
     return "pending"
 
 @app.route('/api/status', methods=['GET'])

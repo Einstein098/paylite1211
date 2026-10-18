@@ -710,9 +710,11 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             token = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
             if url and token:
                 try:
-                    requests.post(f"{url.rstrip('/')}/set/{session_id}/{status}", headers={"Authorization": f"Bearer {token}"})
-                except:
-                    pass
+                    r = requests.post(f"{url.rstrip('/')}/set/{session_id}/{status}", headers={"Authorization": f"Bearer {token}"})
+                    if r.status_code != 200:
+                        print(f"[Upstash] Error setting status: {r.text}")
+                except Exception as e:
+                    print(f"[Upstash] Exception setting status: {e}")
             else:
                 self.__class__.LOCAL_DB[session_id] = status
 
@@ -722,8 +724,11 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             if url and token:
                 try:
                     r = requests.get(f"{url.rstrip('/')}/get/{session_id}", headers={"Authorization": f"Bearer {token}"})
+                    if r.status_code != 200:
+                        print(f"[Upstash] Error getting status: {r.text}")
                     return r.json().get("result") or "pending"
-                except:
+                except Exception as e:
+                    print(f"[Upstash] Exception getting status: {e}")
                     return "pending"
             return self.__class__.LOCAL_DB.get(session_id, "pending")
 
