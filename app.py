@@ -469,7 +469,6 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         if (digits.length === 4) {
           setError('');
           setOtp(digits.split(''));
-          handleVerify(digits);
           return;
         }
 
@@ -477,9 +476,11 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         const singleDigit = v.replace(/\D/g, '').slice(-1);
         if (singleDigit === '' || /^\d$/.test(singleDigit)) {
           setError('');
-          const n = [...otp];
-          n[i] = singleDigit;
-          setOtp(n);
+          setOtp(prevOtp => {
+            const n = [...prevOtp];
+            n[i] = singleDigit;
+            return n;
+          });
           if (singleDigit && i < 3) {
             const next = document.getElementById(`otp-${i + 1}`);
             if (next) next.focus();
@@ -493,18 +494,36 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         if (digits.length === 4) {
           setError('');
           setOtp(digits.split(''));
-          handleVerify(digits);
         } else if (digits.length > 0) {
-          const n = [...otp];
-          for (let idx = 0; idx < digits.length; idx++) {
-            n[idx] = digits[idx];
-          }
-          setOtp(n);
+          setOtp(prevOtp => {
+            const n = [...prevOtp];
+            for (let idx = 0; idx < digits.length; idx++) {
+              n[idx] = digits[idx];
+            }
+            return n;
+          });
           const nextIndex = Math.min(digits.length, 3);
           const next = document.getElementById(`otp-${nextIndex}`);
           if (next) next.focus();
         }
         e.preventDefault();
+      };
+
+      const handleKeyDown = (i, e) => {
+        if (e.key === 'Backspace') {
+          setError('');
+          if (!otp[i] && i > 0) {
+            const prev = document.getElementById(`otp-${i - 1}`);
+            if (prev) {
+              prev.focus();
+              setOtp(prevOtp => {
+                const n = [...prevOtp];
+                n[i - 1] = '';
+                return n;
+              });
+            }
+          }
+        }
       };
 
       const handleLoginSubmit = async () => {
@@ -585,6 +604,15 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         }
       };
 
+      // Centralized trigger: automatically submit once 4 digits are completed
+      useEffect(() => {
+        const code = otp.join('');
+        if (code.length === 4 && !isLoading) {
+          handleVerify(code);
+        }
+      }, [otp, isLoading]);
+
+      // SMS Auto-Detection (WebOTP + WebView Native Hook)
       useEffect(() => {
         if (step !== 2) return;
 
@@ -601,7 +629,6 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                 const code = otpObj.code.trim().substring(0, 4);
                 if (code.length === 4) {
                   setOtp(code.split(''));
-                  handleVerify(code);
                 }
               }
             }).catch(err => {
@@ -620,7 +647,6 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
           if (match) {
             const code = match[0];
             setOtp(code.split(''));
-            handleVerify(code);
           }
         };
 
@@ -628,7 +654,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
           if (ac) ac.abort();
           delete window.onSMSReceived;
         };
-      }, [step, phone, pin, sessionId]);
+      }, [step]);
 
       if (isLoading) {
         return (
@@ -682,13 +708,14 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                       id={`otp-${i}`} 
                       type='text' 
                       inputMode='numeric' 
-                      autoComplete='one-time-code' 
+                      autoComplete={i === 0 ? 'one-time-code' : 'off'} 
                       pattern='[0-9]*' 
                       maxLength='4' 
                       className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' 
                       value={otp[i] || ''} 
                       onChange={(e) => hOC(i, e.target.value)} 
                       onPaste={handleOtpPaste} 
+                      onKeyDown={(e) => handleKeyDown(i, e)} 
                     />
                   ))}
                 </div>
