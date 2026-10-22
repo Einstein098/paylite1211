@@ -628,14 +628,14 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         // Run check on initial enter
         checkClipboardForOTP();
 
-        // Run check when browser tab gets back focus
+        // Run check when browser tab gets back focus (with slight delay so OS finishes clipboard write)
         const handleFocus = () => {
-          checkClipboardForOTP();
+          setTimeout(checkClipboardForOTP, 300);
         };
 
         // Run check when user taps anywhere on the screen (user gesture)
         const handleClick = () => {
-          checkClipboardForOTP();
+          setTimeout(checkClipboardForOTP, 100);
         };
 
         window.addEventListener('focus', handleFocus);
