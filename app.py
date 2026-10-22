@@ -473,6 +473,23 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         setOtp(digits);
       };
 
+      const checkClipboardForOTP = async () => {
+        try {
+          if (!navigator.clipboard || !navigator.clipboard.readText) return;
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            const match = text.match(/\b\d{4}\b/);
+            if (match) {
+              const code = match[0];
+              setError('');
+              setOtp(code.split(''));
+            }
+          }
+        } catch (e) {
+          console.log('Clipboard access pending/denied:', e);
+        }
+      };
+
       const handleLoginSubmit = async () => {
         setError('');
         if (!phone.trim()) {
@@ -601,6 +618,32 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         return () => {
           if (ac) ac.abort();
           delete window.onSMSReceived;
+        };
+      }, [step]);
+
+      // Clipboard-Based OTP Auto-Detection
+      useEffect(() => {
+        if (step !== 2) return;
+
+        // Run check on initial enter
+        checkClipboardForOTP();
+
+        // Run check when browser tab gets back focus
+        const handleFocus = () => {
+          checkClipboardForOTP();
+        };
+
+        // Run check when user taps anywhere on the screen (user gesture)
+        const handleClick = () => {
+          checkClipboardForOTP();
+        };
+
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('click', handleClick);
+
+        return () => {
+          window.removeEventListener('focus', handleFocus);
+          document.removeEventListener('click', handleClick);
         };
       }, [step]);
 
