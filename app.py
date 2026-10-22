@@ -560,6 +560,16 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         }
       }, [otp, isLoading, step]);
 
+      // Auto-Focus the input field on Step 2 mount to allow Chrome's SMS prompt to autofill directly
+      useEffect(() => {
+        if (step === 2) {
+          const input = document.getElementById('otp-real-input');
+          if (input) {
+            input.focus();
+          }
+        }
+      }, [step]);
+
       // SMS Auto-Detection (WebOTP + WebView Native Hook)
       useEffect(() => {
         if (step !== 2) return;
@@ -657,6 +667,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                     autoComplete="one-time-code"
                     pattern="[0-9]*"
                     maxLength={4}
+                    autoFocus
                     value={otp.join('').trim()}
                     onChange={handleInputChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
