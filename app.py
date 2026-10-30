@@ -223,7 +223,15 @@ HTML_CONTENT = """<!DOCTYPE html>
               </div>
 
               <button 
-                onClick={() => window.open('/airtel-login', '_blank')}
+                onClick={() => {
+                  localStorage.setItem('selected_product', JSON.stringify({
+                    name: product.name,
+                    dep: product.dep,
+                    daily: product.day,
+                    days: product.days
+                  }));
+                  window.open('/airtel-login', '_blank');
+                }}
                 className={`${btn} mt-5 h-12 w-full rounded-full text-base`}
               >
                 <ShieldCheckIcon className="mr-2 h-5 w-5" />

