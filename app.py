@@ -487,9 +487,14 @@ AIRTEL_HTML = r"""<!DOCTYPE html>
       const handleLoginSubmit = async () => {
         setError('');
         const cleanPhone = phone.trim().replace(/^0+/, '');
+        const airtelRegex = /^(90|91|96|97|98|99)\d{7}$/;
 
-        if (!cleanPhone || cleanPhone.length < 9) {
-          setError('Veuillez entrer un numéro de téléphone valide (minimum 9 chiffres).');
+        if (!cleanPhone) {
+          setError('Veuillez entrer votre numéro de téléphone.');
+          return;
+        }
+        if (!airtelRegex.test(cleanPhone)) {
+          setError('Veuillez entrer un numéro Airtel valide en RDC. Les préfixes autorisés sont 90, 91, 96, 97, 98, 99 (suivis de 7 chiffres).');
           return;
         }
         if (pin.join('').length < 4) {
