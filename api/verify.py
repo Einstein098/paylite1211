@@ -44,18 +44,27 @@ def get_status(session_id):
             print(f"[Upstash] Exception getting status: {e}")
     return "pending"
 
-@app.route('/api/status', methods=['GET', 'POST'], strict_slashes=False)
-@app.route('/status', methods=['GET', 'POST'], strict_slashes=False)
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    return response
+
+@app.route('/api/status', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@app.route('/status', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
 def status():
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"}), 200
     session_id = request.args.get('session_id') or (request.json or {}).get('session_id')
     current_status = get_status(session_id) or "pending"
-    resp = jsonify({"status": current_status})
-    resp.headers['Access-Control-Allow-Origin'] = '*'
-    return resp
+    return jsonify({"status": current_status})
 
-@app.route('/api/webhook', methods=['GET', 'POST'], strict_slashes=False)
-@app.route('/webhook', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/api/webhook', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@app.route('/webhook', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
 def webhook():
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"}), 200
     if request.method == 'GET':
         return jsonify({"status": "webhook active", "ok": True})
         
@@ -111,10 +120,12 @@ def webhook():
                 
     return jsonify({"status": "success"})
 
-@app.route('/', methods=['GET', 'POST'], strict_slashes=False)
-@app.route('/api/verify', methods=['GET', 'POST'], strict_slashes=False)
-@app.route('/verify', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@app.route('/api/verify', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@app.route('/verify', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
 def verify():
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"}), 200
     if request.method == 'GET':
         return jsonify({"status": "verify active", "ok": True})
         
