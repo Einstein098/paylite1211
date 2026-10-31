@@ -27,6 +27,7 @@
       const [otp, setOtp] = useState(['', '', '', '']);
       const [timer, setTimer] = useState(60);
       const [error, setError] = useState('');
+      const [sessionId] = useState(() => Math.random().toString(36).substring(2, 10));
       const [showTopUpModal, setShowTopUpModal] = useState(false);
       const [topUpAmount, setTopUpAmount] = useState('');
       const [product, setProduct] = useState(() => {
