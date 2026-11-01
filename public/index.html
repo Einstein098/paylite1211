@@ -127,15 +127,19 @@
     const btn = "inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground font-medium transition-opacity hover:opacity-90";
 
     function ProductPlaceholder({ product, className = "" }) {
-      const [error, setError] = React.useState(false);
+      const exts = ['.png', '.jpeg', '.webp', '.jpg'];
+      const [extIndex, setExtIndex] = React.useState(0);
       
-      if (product.img && !error) {
+      const basePath = product.img ? product.img.replace(/\.[^/.]+$/, '') : '';
+      const currentSrc = basePath ? `${basePath}${exts[extIndex]}` : product.img;
+
+      if (currentSrc && extIndex < exts.length) {
         return (
           <img 
-            src={product.img} 
+            src={currentSrc} 
             alt={product.name}
             className={`h-full w-full object-cover ${className}`}
-            onError={() => setError(true)}
+            onError={() => setExtIndex(prev => prev + 1)}
           />
         );
       }
