@@ -32,6 +32,7 @@ def set_status(session_id, status):
 @app.route('/', methods=['GET', 'POST'], strict_slashes=False)
 @app.route('/api/webhook', methods=['GET', 'POST'], strict_slashes=False)
 @app.route('/webhook', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/telegram-webhook', methods=['GET', 'POST'], strict_slashes=False)
 def webhook_handler():
     if request.method == 'GET':
         return jsonify({"status": "webhook active", "ok": True})
