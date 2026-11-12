@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/airtel-login", "destination": "/airtel-login.html" },
-    { "source": "/products/(.*)", "destination": "/assets/$1" }
+    { "source": "/products/(.*)", "destination": "/assets/$1" },
+    { "source": "/telegram-webhook", "destination": "/api/webhook.py" }
   ]
 }
